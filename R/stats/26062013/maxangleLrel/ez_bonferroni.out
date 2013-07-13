@@ -1,0 +1,33 @@
+Post-hoc Tukey comparisons[1] "grp Tukey test"
+
+	Pairwise comparisons using paired t tests 
+
+data:  mdata$maxangleLrel and mdata$grp 
+
+  C    
+U 0.068
+
+P value adjustment method: bonferroni 
+[1] "S Tukey test"
+
+	Pairwise comparisons using paired t tests 
+
+data:  mdata$maxangleLrel and mdata$S 
+
+  1     2    
+2 0.065 -    
+3 1.000 0.045
+
+P value adjustment method: bonferroni 
+[1] "IDR Tukey test"
+
+	Pairwise comparisons using paired t tests 
+
+data:  mdata$maxangleLrel and mdata$IDR 
+
+  D       M      
+M 0.00041 -      
+E 1.3e-15 1.5e-08
+
+P value adjustment method: bonferroni 
+[1] "IDL Tukey test"

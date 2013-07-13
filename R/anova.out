@@ -1,0 +1,152 @@
+UniLvfCircularity ID
+vfCircularityL S IDR IDL IDR:IDL grp:IDR grp:IDL S:IDR grp:S:IDL
+vfTrajCircularityR S IDR IDL IDR:IDL S:IDR:IDL
+d4D S IDR IDL IDR:IDL grp:S:IDR
+vfTrajCircularityLrel IDR grp:S IDR:IDL
+UniRMT S ID
+vfCircularityR S IDR IDL IDR:IDL grp:IDR grp:IDR:IDL S:IDR:IDL
+accTimeRrel IDL IDR:IDL
+accTimeR S IDR IDL grp:IDR grp:IDL
+UniRIPerfEf S ID S:ID
+UniLf S ID S:ID
+DID_maxangleR S DID
+DID_q2R S DID grp:DID
+q3L S IDL grp:S grp:IDR
+DID_accQR DID grp:DID
+DID_q2L
+DID_minPeakDelayNorm grp:S:DID
+DID_maxangleL S DID grp:DID
+UniRmaxangle S ID
+UniRvfCircularity S ID
+DID_q4L S
+phDiffMean IDR:IDL grp:IDR:IDL
+DID_phDiffStd DID grp:DID
+DID_flsPC S DID grp grp:S grp:DID
+maxangleLrel IDR IDR:IDL grp:IDR
+maxangleR S IDR IDL IDR:IDL grp:IDL
+DID_IPerfEfR DID grp S:DID
+UniLq3 S ID
+UniLq2 S ID
+UniLq1 ID
+UniLq4 S ID
+d3D grp S IDR IDL grp:S grp:IDR:IDL S:IDR:IDL grp:S:IDR:IDL
+DID_q3R DID
+q4R S IDR IDL IDR:IDL
+q1Lrel
+DID_MI S DID grp grp:S grp:DID
+DID_flsAmp S DID grp:DID
+q3Rrel grp:S:IDL
+q4L S IDR IDL IDR:IDL S:IDR
+DID_q3L
+DID_minPeakDelay grp:S:DID
+IPerfLrel IDR IDR:IDL grp:IDR grp:S:IDR
+DID_decTimeR S DID grp:DID
+decTimeLrel IDR IDL IDR:IDL S:IDR:IDL
+UniRdecTime S ID
+DID_decTimeL S DID grp S:DID
+q1Rrel grp
+q1L IDL
+DID_q4R S DID grp:DID
+UniLMT S ID
+DID_peakVelL
+q1R IDR
+UniLaccQ ID S:ID
+DID_d2D DID S:DID
+q3Lrel grp:IDR
+UniRHarmonicity S ID
+DID_d4D DID S:DID
+DID_rho DID grp grp:DID
+peakVelLrel IDR
+UniLHarmonicity ID
+q4Lrel IDR IDR:IDL
+HarmonicityL S IDR IDL IDR:IDL S:IDR S:IDL grp:IDR:IDL S:IDR:IDL grp:S:IDR grp:S:IDR:IDL
+q2Lrel IDR IDR:IDL grp:S:IDR
+IPerfEfR IDR IDL IDR:IDL S:IDR
+MI grp S grp:S IDR:IDL grp:IDR:IDL
+DID_accTimeL S DID
+DID_accTimeR S DID grp:DID
+q2R S IDR IDL IDR:IDL S:IDR:IDL
+vfCircularityRrel IDR IDL IDR:IDL
+MTRrel IDR IDL IDR:IDL
+HarmonicityR S IDR IDL IDR:IDL grp:IDR S:IDR grp:IDR:IDL grp:S:IDL grp:S:IDR:IDL
+rho grp IDR:IDL grp:IDR:IDL
+flsPC grp IDR:IDL grp:IDR:IDL
+IPerfEfRrel IDR IDR:IDL S:IDL grp:IDR:IDL
+HarmonicityLrel IDR IDL IDR:IDL grp:S:IDR
+fRrel IDL IDR:IDL grp:IDL S:IDR:IDL
+DID_MTL S DID grp S:DID
+DID_phDiffMean
+DID_accQL
+DID_vfTrajCircularityL S
+DID_IPerfR S grp:DID
+UniLIPerf S ID S:ID
+q3R IDR grp:S:IDL
+vfCircularityLrel IDR IDR:IDL
+minPeakDelay grp:S:IDR
+UniLvfTrajCircularity S ID
+fLrel IDR IDR:IDL grp:IDR
+DID_IPerfL S DID grp grp:DID
+DID_vfTrajCircularityR S S:DID
+DID_fR S DID grp:DID
+accTimeL S IDR IDL grp:IDL
+accQL IDR IDL IDR:IDL S:IDL
+decTimeRrel IDR IDL IDR:IDL
+UniRvfTrajCircularity S ID
+accTimeLrel IDR IDR:IDL S:IDR:IDL
+UniLpeakVel ID grp:S:ID
+UniLdecTime S ID grp:ID
+UniRq1 ID
+accQLrel IDR IDL IDR:IDL
+UniRq3 S ID
+UniRq2 S ID
+UniRq4 S ID
+DID_fL S DID grp grp:DID
+DID_vfCircularityL S DID grp grp:S
+decTimeL S IDR IDL IDR:IDL grp:IDL S:IDR
+flsAmp grp S IDR IDL IDR:IDL S:IDR S:IDL grp:IDR:IDL
+UniRf S ID S:ID
+DID_d3D S DID grp grp:S grp:DID S:DID grp:S:DID
+peakVelRrel IDL
+decTimeR S IDR IDL IDR:IDL grp:IDR S:IDL
+DID_vfCircularityR S DID grp:DID
+DID_d1D
+DID_HarmonicityR S DID grp grp:S grp:DID
+UniRaccTime S ID
+q2L S IDR IDL IDR:IDL S:IDL grp:S:IDR
+peakVelR S IDR IDL
+vfTrajCircularityRrel IDR IDL IDR:IDL S:IDR:IDL grp:S:IDR
+peakVelL S IDR IDL IDR:IDL
+DID_HarmonicityL
+UniLIPerfEf S ID S:ID
+d2D IDR IDL IDR:IDL
+IPerfRrel IDL IDR:IDL grp:IDL S:IDR:IDL
+MTLrel IDR IDL IDR:IDL S:IDR:IDL
+UniRpeakVel S ID
+vfTrajCircularityL S IDR IDL IDR:IDL
+accQRrel IDR IDL IDR:IDL grp:S:IDL
+maxangleL S IDR IDL IDR:IDL grp:IDR
+IPerfR S IDR IDL IDR:IDL grp:IDL S:IDR S:IDR:IDL grp:S:IDL
+UniLmaxangle S ID
+DID_MTR S DID grp:DID
+MTR S IDR IDL IDR:IDL grp:IDR S:IDL
+UniRIPerf S ID S:ID
+IPerfEfLrel IDR IDR:IDL grp:IDR grp:S:IDR
+phDiffStd IDR:IDL grp:IDR:IDL
+HarmonicityRrel IDL grp:S grp:S:IDL grp:S:IDR:IDL
+d1D
+MTL S IDR IDL IDR:IDL grp:IDL S:IDR
+minPeakDelayNorm grp:IDR:IDL grp:S:IDR
+UniRaccQ ID
+IPerfL S IDR IDL IDR:IDL S:IDR S:IDL S:IDR:IDL grp:S:IDR
+maxangleRrel IDR IDL IDR:IDL grp:IDL
+fR S IDR IDL IDR:IDL grp:IDL S:IDR S:IDR:IDL grp:S:IDL
+IPerfEfL S IDR IDL IDR:IDL S:IDR S:IDL S:IDR:IDL grp:S:IDR
+DID_q1R DID
+DID_IPerfEfL S DID grp grp:DID
+UniLaccTime S ID
+q2Rrel IDR IDL IDR:IDL S:IDR:IDL
+q4Rrel IDL grp:S IDR:IDL grp:IDR:IDL
+DID_q1L
+fL S IDR IDL IDR:IDL S:IDR S:IDL S:IDR:IDL grp:S:IDR
+DID_peakVelR
+accQR S IDR IDL IDR:IDL grp:IDR S:IDR grp:S:IDL grp:S:IDR:IDL

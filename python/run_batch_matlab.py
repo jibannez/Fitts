@@ -29,7 +29,7 @@ TEMPLATE_PLOT_ANGULAR,\
 TEMPLATE_PLOT, \
 TEMPLATE_PLOT_VF = range(10)
 
-template=TEMPLATE_FULL2
+template=TEMPLATE_FULL
 
 def write_scripts(pp):    
     #Open file to write script
@@ -48,9 +48,9 @@ def get_script_from_template(tpl,pp):
         conf=Config();
         conf.parallelMode=0;
         p=Participant(%d,conf);
-        p.save(); p.plot(); 
-        an=Analysis(p); an.save(%d);
-        exit""" % (pp,pp)    
+        save(p); 
+        ds=DataSets(p); save(ds);
+        exit""" % pp    
     elif tpl==TEMPLATE_FULL2:
         msg="""\
         conf=Config();
@@ -96,14 +96,14 @@ def get_script_from_template(tpl,pp):
         conf=Config();
         conf.parallelMode=0;
         p=Participant(%d,conf);
-        p.plot_angphsp()	
-	p.plot_angvar('ph');
+        p.plot_angphsp()    
+        p.plot_angvar('ph');
         p.plot_angvar('omega');
         p.plot_angvar('alpha');
         p.plot_angvar('xnorm');
         p.plot_angvar('vnorm');
         p.plot_angvar('anorm');
-	p,plot_angvar('jerknorm')
+        p,plot_angvar('jerknorm')
         exit""" % pp
     elif tpl==TEMPLATE_PLOT:
         msg="""\
@@ -129,6 +129,6 @@ if __name__ == '__main__':
         pool=Pool(processes=WRKs,maxtasksperchild=1)
         
     pool.map(os.system, map(write_scripts,PPs), round(PPno/WRKs) )
-    pool.close()
+    pool.terminate()
     pool.join()
     sys.exit()

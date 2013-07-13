@@ -1,17 +1,18 @@
 #Analysis of Variance for Bimanual Fitts experiment
 require(doMC)
-source("aux_fcns.R")
-source("plot_fcns_bi.R")
-source("stat_fcns_bi.R")
-source("plot_fcns_bi_did.R")
-source("stat_fcns_bi_did.R")
-source("plot_fcns_uni.R")
-source("stat_fcns_uni.R")
+rootpath='/home/jorge/Dropbox/dev/Bimanual-Fitts/R'
+source(paste(rootpath,'aux_fcns.R',sep='/'))
+source(paste(rootpath,'plot_fcns_bi.R',sep='/'))
+source(paste(rootpath,'stat_fcns_bi.R',sep='/'))
+source(paste(rootpath,'plot_fcns_bi_did.R',sep='/'))
+source(paste(rootpath,'stat_fcns_bi_did.R',sep='/'))
+source(paste(rootpath,'plot_fcns_uni.R',sep='/'))
+source(paste(rootpath,'stat_fcns_uni.R',sep='/'))
+source(paste(rootpath,'get_Rname.R',sep='/'))
 registerDoMC()
 
 #Prepare global paths
-rootpath='/home/jorge/Dropbox/dev/Bimanual-Fitts/R'
-Rname='refactor'
+
 opath=paste(paste(rootpath,"stats",sep='/'),Rname,sep='/')
 dir.create(opath,showWarnings=FALSE)
 Rdatapath=paste(paste(rootpath,'dataframes',sep='/'),Rname,sep='/')
@@ -166,5 +167,5 @@ if (do_unimanual == TRUE) {
 	}
 }	
 
-
+quit()
 

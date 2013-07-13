@@ -3,9 +3,15 @@
 
 import os, sys
 
+def get_results_string(filepath):
+	fid=open(filepath,'r')
+	line=fid.readline()
+	return line.split('=')[1][1:-2]
+
 did=1
-RES_PATH="/home/jorge/Dropbox/dev/Bimanual-Fitts/R/stats"
-RES_STR="refactor"
+R_PATH="/home/jorge/Dropbox/dev/Bimanual-Fitts/R"
+RES_PATH=os.path.join(R_PATH,"stats")
+RES_STR=get_results_string(os.path.join(R_PATH,"get_Rname.R"))
 RES_DIR=os.path.join(RES_PATH,RES_STR)
 
 
@@ -24,6 +30,8 @@ else:
 header=['DFn','DFd','F','p','ges','W','p[Mal]','GGe','p[GG]','HFe','p[HF]']
 idx={vname:i for i,vname in enumerate(header)}
 line_length=160
+
+
 
 def print_results(res,pvar='p',pval=0.05,sig=1):
     varsorted=sorted(res.keys())
@@ -192,7 +200,7 @@ def get_factors(vname):
     else:
         return ['grp','S','IDR', 'IDL','grp:S','IDR:IDL','grp:IDR','grp:IDL', 'S:IDR','S:IDL','grp:IDR:IDL','S:IDR:IDL','grp:S:IDR','grp:S:IDL','grp:S:IDR:IDL']
     
-def save_results(results,fname='anova.out'):
+def save_results(results,fname=os.path.join(R_PATH,'anova.out')):
     sep=' '
     f=open(fname,'w+')
     for key,value in results.iteritems():
