@@ -9,10 +9,10 @@ source(paste(rootpath,'stat_fcns_bi_did.R',sep='/'))
 source(paste(rootpath,'plot_fcns_uni.R',sep='/'))
 source(paste(rootpath,'stat_fcns_uni.R',sep='/'))
 source(paste(rootpath,'get_Rname.R',sep='/'))
+source(paste(rootpath,'config_analysis.R',sep='/'))
 registerDoMC()
 
 #Prepare global paths
-
 opath=paste(paste(rootpath,"stats",sep='/'),Rname,sep='/')
 dir.create(opath,showWarnings=FALSE)
 Rdatapath=paste(paste(rootpath,'dataframes',sep='/'),Rname,sep='/')
@@ -20,25 +20,6 @@ uLfile=paste(Rdatapath,"UniL_fitts.dat",sep='/')
 uRfile=paste(Rdatapath,"UniR_fitts.dat",sep='/')
 bfile=paste(Rdatapath,"Bi_fitts.dat",sep='/')
 bdfile=paste(Rdatapath,"BiDelta_fitts.dat",sep='/')
-#Select analysis to perform
-do_bimanualDelta=TRUE
-do_bimanual=TRUE
-do_unimanual=TRUE
-do_relative=TRUE
-do_parallel=TRUE
-
-do_summary=TRUE
-do_aov=FALSE
-do_lme=FALSE
-do_lmer=FALSE
-do_lmer_tukey=FALSE
-do_ANOVA=TRUE
-do_CompareANOVA=TRUE
-
-do_barchart=FALSE
-do_interaction=FALSE
-do_boxplots=FALSE
-do_density=FALSE
 
 #Get size of data tables by preloading
 factBiNo <-5

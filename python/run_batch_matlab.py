@@ -12,7 +12,7 @@ if not os.path.exists(BATCH_DIR):
     os.makedirs(BATCH_DIR)
 
 
-WRKs=1
+WRKs=2
 PPno=10
 PPs=range(1,11)
 #PPs=[9]
@@ -40,7 +40,7 @@ def write_scripts(pp):
     #Write text to file and close
     f.write(get_script_from_template(template,pp))
     f.close()
-    return "sleep %d; nohup /opt/matlab2012/bin/matlab -nodesktop -nosplash -r %s > ~/%s.out" % (pp,filename[:-2],filename[:-2])
+    return "sleep %d; nohup /opt/matlab2012/bin/matlab -nodesktop -nosplash -r %s > /dev/null" % (pp,filename[:-2])
 
 def get_script_from_template(tpl,pp):
     if tpl==TEMPLATE_FULL:

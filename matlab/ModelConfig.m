@@ -90,15 +90,15 @@ classdef ModelConfig < handle
 % 
 
         %%%%%%%%   Model Equations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        fit2D= @(p, y) [ -1.1*( p(1) + p(3)*sin(2*(y(7)-p(9))+p(6)) + p(5)*cos(4*(y(1)-p(7))))+ p(9)*sin(y(2)-y(1)) ;...
-                         -1.1*( p(2) + p(4)*sin(2*(y(8)-p(10))+p(6)) + p(6)*cos(4*(y(2)-p(8))))+ p(9)*sin(y(1)-y(2))];
-        ode2D=inline([ '[-1.1*( w1 + a1*sin(2*(y(1)-c1)+d1) + b1*cos(4*(y(1)-c1)) + alpha*sin(y(2)-y(1))) ;' ...
-                      '  -1.1*( w2 + a2*sin(2*(y(2)-c2)+d2) + b2*cos(4*(y(2)-c2)) + alpha*sin(y(1)-y(2))) ]'],...
+        fit2D= @(p, y) [ -0.8*( p(1) + p(3)*sin(2*(y(1)-p(7))+p(9)) + p(5)*cos(4*(y(1)-p(7))))+ p(11)*sin(y(2)-y(1)) ;...
+                         -0.8*( p(2) + p(4)*sin(2*(y(2)-p(8))+p(10)) + p(6)*cos(4*(y(2)-p(8))))+ p(11)*sin(y(1)-y(2))];
+        ode2D=inline([ '[-1*( w1 + a1*sin(2*(y(1)-c1)+d1) + b1*cos(4*(y(1)-c1)) + alpha*sin(y(2)-y(1))) ;' ...
+                      '  -1*( w2 + a2*sin(2*(y(2)-c2)+d2) + b2*cos(4*(y(2)-c2)) + alpha*sin(y(1)-y(2))) ]'],...
                       't','y','kk','w1','w2','a1','a2','b1','b2','c1','c2','d1','d2','alpha')
-        vf2D=inline(' -1.1*( w + a*sin(2*(y1-c)+d) + b*cos(4*(y1-c)) + alpha*sin(y1-y2))',...
+        vf2D=inline(' -1*( w + a*sin(2*(y1-c)+d) + b*cos(4*(y1-c)) + alpha*sin(y1-y2))',...
                     'y1','y2','w','a','b','c','d','alpha')
-        nc1 =inline(' -1.1*( y - asin(-(w + a*sin(2*(y-c)+d) + b*cos(4*(y-c))) / (alpha)) + pi*n)','y','w','alpha','a','b','c','d','n')
-        nc2 =inline(' -1.1*( y + asin(-(w + a*sin(2*(y-c)+d) + b*cos(4*(y-c))) / (alpha)) + pi*n)','y','w','alpha','a','b','c','d','n')
+        nc1 =inline(' -1*( y - asin(-(w + a*sin(2*(y-c)+d) + b*cos(4*(y-c))) / (alpha)) + pi*n)','y','w','alpha','a','b','c','d','n')
+        nc2 =inline(' -1*( y + asin(-(w + a*sin(2*(y-c)+d) + b*cos(4*(y-c))) / (alpha)) + pi*n)','y','w','alpha','a','b','c','d','n')
 
         
         %%%%%%%%   Model Equations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
@@ -167,12 +167,17 @@ classdef ModelConfig < handle
         params2Dc={          1.8,  1.7,  1,   2,    0,    0,     0.2}   %
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
-        %%%%%%%%           w    a    b    c     d                    %%%%
+        %%%%%%%%           w    a    b    c     d       tau          %%%%
         params1Dbyname=containers.Map({'e','m1','m3','d'},...     
                         {[11.0, 3.0, 1.0, pi/2, -pi/2],...
                          [ 4.5, 0.5, 0.5, pi/2, -pi/4],...
                          [ 5.0, 0.8, 0.8, pi/3, -pi/4],...
-                         [ 3.2, 1.5, 1.0,  1.0,   0.0]});
+                         [ 3.2, 1.5, 1.0,  1.0,   0.0]});        
+        params1Dmonostablebyname=containers.Map({'e','m1','m3','d'},...     
+                        {[11.0, 3.0, 1.0, pi/2, -pi/2, 1],...
+                         [ 4.5, 0.5, 0.5, pi/2, -pi/4, 1],...
+                         [ 5.0, 0.8, 0.8, pi/3, -pi/4, 1],...
+                         [ 3.2, 2.0, 1.0,  1.0,   0.0, 1]});
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %%%%%%%%          w1    w2    a1    a2    b1   b2     c1    c2     d1     d2   alpha1  %%%%
@@ -183,7 +188,16 @@ classdef ModelConfig < handle
                         [ 3.2,  4.5,  1.5,  0.5,  1.0, 0.5,  pi/3, pi/2,  0.0,  -pi/4,  0.2],...
                         [ 3.2,  3.2,  1.5,  1.5,  1.0, 1.0,  pi/3, pi/3,  0.0,   0.0,   0.2]})
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+
+        %%%%%%%%          w1    w2    a1    a2    b1   b2     c1    c2     d1     d2   alpha1 tau%
+        params2Dmonostablebyname=containers.Map({'ee','em','ed1','ed3','md3','dd'},...                    
+                       {[11.0,11.0,  3.0,  3.0,  1.0, 1.0, pi/2,  pi/2, -pi/2, -pi/2,  0.2,   1],...
+                        [11.0, 4.5,  3.0,  0.5,  1.0, 0.5, pi/2,  pi/2, -pi/2, -pi/4,  0.2,   1],...
+                        [11.0, 2.0,  3.0,  1.1,  1.0, 0.5, pi/2,  pi/3, -pi/2,   0.0,  0.2,   1],...
+                        [11.0, 3.2,  3.0,  2.0,  1.0, 1.0, pi/2,  pi/3, -pi/2,   0.0,  0.2,   1],...                        
+                        [ 4.5, 3.2,  0.5,  1.5,  0.5, 1.0, pi/2,  pi/3, -pi/4,   0.0,  0.2,   1],...
+                        [ 3.2, 3.2,  2.0,  2.0,  1.0, 1.0, pi/3,  pi/3,  0.0,    0.0,  0.2,   1]})
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         parnames3D={         'w1','w2','a1','a2','b1','b2','c1','c2','d1','d2','alpha1','alpha2'}%
@@ -314,7 +328,7 @@ classdef ModelConfig < handle
             
             if mdlcfg.stoch==1
                 mdlcfg.ode=@ode15sn;        
-                mdlcfg.options.Q = 0.01;              % noise strength with same dimension as variable
+                mdlcfg.options.Q = 0.005;              % noise strength with same dimension as variable
                 mdlcfg.options.NoiseFn = 'ynoise';      % Noise function
             else
                 mdlcfg.ode=@ode23;
@@ -331,7 +345,7 @@ classdef ModelConfig < handle
             mdlcfg.options = odeset('MaxStep',.01);
             if mdlcfg.stoch==1
                 mdlcfg.ode=@ode15sn;        
-                mdlcfg.options.Q = 0.0075;              
+                mdlcfg.options.Q = 0.005;              
                 mdlcfg.options.NoiseFn = 'ynoise';      
             else
                 mdlcfg.ode=@ode23;

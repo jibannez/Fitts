@@ -48,8 +48,10 @@ classdef TimeSeriesBimanual < handle
         Ljerknorm_hist
         Lph_hist
         Lomega_hist
+        Lomeganorm_hist
         Lalpha_hist
         Lamp_hist
+        Lampnorm_hist
         %phase-based histograms
         Lxraw_phhist
         Lvraw_phhist
@@ -64,8 +66,10 @@ classdef TimeSeriesBimanual < handle
         Ljerknorm_phhist
         Lph_phhist
         Lomega_phhist
+        Lomeganorm_phhist
         Lalpha_phhist
         Lamp_phhist
+        Lampnorm_phhist
         %peaks
         Lpeaks
         Lphpeaks
@@ -103,8 +107,10 @@ classdef TimeSeriesBimanual < handle
         Rjerknorm_hist
         Rph_hist
         Romega_hist
+        Romeganorm_hist
         Ralpha_hist
         Ramp_hist
+        Rampnorm_hist
         %phase-based histograms
         Rxraw_phhist
         Rvraw_phhist
@@ -119,8 +125,10 @@ classdef TimeSeriesBimanual < handle
         Rjerknorm_phhist
         Rph_phhist
         Romega_phhist
+        Romeganorm_phhist        
         Ralpha_phhist
         Ramp_phhist
+        Rampnorm_phhist
         %peaks
         Rpeaks
         Rvpeaks
@@ -132,7 +140,7 @@ classdef TimeSeriesBimanual < handle
     
     %Hidden properties with actual used by dynamic property getters/setters
     properties (SetAccess = private, Hidden)
-        %Contain the actual ts data, stored or raw according to config.
+        %Contain the actual ts data, compressed or raw according to config.
         Lxraw_
         Lvraw_
         Laraw_
@@ -299,56 +307,52 @@ classdef TimeSeriesBimanual < handle
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         function Lxnorm = get.Lxnorm(ts)
-            Lxnorm = ts.Lx/max(abs(ts.Lx));
+            Lxnorm = normalize(ts.Lx);
         end
         
         
         function Lvnorm = get.Lvnorm(ts)
-            Lvnorm = ts.Lv/max(abs(ts.Lv));
+            Lvnorm = normalize(ts.Lv);
         end
         
         
         function Lanorm = get.Lanorm(ts)
-            Lanorm = ts.La/max(abs(ts.La));
+            Lanorm = normalize(ts.La);
         end
         
         
         function Ljerknorm = get.Ljerknorm(ts)
-            Ljerknorm = ts.Ljerk/max(abs(ts.Ljerk));
+            Ljerknorm = normalize(ts.Ljerk);
         end
         
         
         function Rxnorm = get.Rxnorm(ts)
-            Rxnorm = ts.Rx/max(abs(ts.Rx));
+            Rxnorm = normalize(ts.Rx);
         end
         
         
         function Rvnorm = get.Rvnorm(ts)
-            Rvnorm = ts.Rv/max(abs(ts.Rv));
+            Rvnorm = normalize(ts.Rv);
         end
         
         
         function Ranorm = get.Ranorm(ts)
-            Ranorm = ts.Ra/max(abs(ts.Ra));
+            Ranorm = normalize(ts.Ra);
         end
         
         
         function Rjerknorm = get.Rjerknorm(ts)
-            Rjerknorm = ts.Rjerk ./ max(abs(ts.Rjerk));
+            Rjerknorm = normalize(ts.Rjerk);
         end
         
         
         function Rph = get.Rph(ts)
             Rph = atan2(ts.Rvnorm,ts.Rxnorm);
-            %Rph = filterdata(unwrap(angle(hilbert(ts.Rx))),ts.conf.cutoff);
-            %Rph = filterdata(unwrap(atan2(ts.Rxnorm,ts.Rvnorm)),ts.conf.cutoff);
         end
         
         
         function Lph = get.Lph(ts)
             Lph = atan2(ts.Lvnorm,ts.Lxnorm);
-            %Lph = filterdata(unwrap(angle(hilbert(ts.Lx))),ts.conf.cutoff);
-            %Lph = filterdata(unwrap(atan2(ts.Lxnorm,ts.Lvnorm)),ts.conf.cutoff*2);
         end
         
         
@@ -377,12 +381,14 @@ classdef TimeSeriesBimanual < handle
         
         
         function Ramp = get.Ramp(ts)
-            Ramp = abs(hilbert(ts.Rxnorm));
+            %Ramp = abs(hilbert(ts.Rxnorm));
+            Ramp = sqrt(ts.Rxnorm.^2+ts.Rvnorm.^2);
         end
         
         
         function Lamp = get.Lamp(ts)
-            Lamp = abs(hilbert(ts.Lxnorm));
+            %Lamp = abs(hilbert(ts.Lxnorm));
+            Lamp = sqrt(ts.Lxnorm.^2+ts.Lvnorm.^2);
         end
         
         
@@ -401,10 +407,8 @@ classdef TimeSeriesBimanual < handle
         function Lxraw_hist = get.Lxraw_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lxraw_hist=get_ts_histogram(ts.Lxraw,peaks,ts.conf.hist_bins);
         end
@@ -412,10 +416,8 @@ classdef TimeSeriesBimanual < handle
         function Lvraw_hist = get.Lvraw_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lvraw_hist=get_ts_histogram(ts.Lvraw,peaks,ts.conf.hist_bins);
         end
@@ -423,10 +425,8 @@ classdef TimeSeriesBimanual < handle
         function Laraw_hist = get.Laraw_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Laraw_hist=get_ts_histogram(ts.Laraw,peaks,ts.conf.hist_bins);
         end
@@ -434,10 +434,8 @@ classdef TimeSeriesBimanual < handle
         function Rxraw_hist = get.Rxraw_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Rxraw_hist=get_ts_histogram(ts.Rxraw,peaks,ts.conf.hist_bins);
         end
@@ -445,10 +443,8 @@ classdef TimeSeriesBimanual < handle
         function Rvraw_hist = get.Rvraw_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Rvraw_hist=get_ts_histogram(ts.Rvraw,peaks,ts.conf.hist_bins);
         end
@@ -456,10 +452,8 @@ classdef TimeSeriesBimanual < handle
         function Raraw_hist = get.Raraw_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Raraw_hist=get_ts_histogram(ts.Raraw,peaks,ts.conf.hist_bins);
         end
@@ -468,10 +462,8 @@ classdef TimeSeriesBimanual < handle
         function Lx_hist = get.Lx_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lx_hist=get_ts_histogram(ts.Lx,peaks,ts.conf.hist_bins);
         end
@@ -480,10 +472,8 @@ classdef TimeSeriesBimanual < handle
         function Lv_hist = get.Lv_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lv_hist=get_ts_histogram(ts.Lv,peaks,ts.conf.hist_bins);
         end
@@ -492,10 +482,8 @@ classdef TimeSeriesBimanual < handle
         function La_hist = get.La_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             La_hist=get_ts_histogram(ts.Lxraw,peaks,ts.conf.hist_bins);
         end
@@ -504,10 +492,8 @@ classdef TimeSeriesBimanual < handle
         function Ljerk_hist = get.Ljerk_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Ljerk_hist=get_ts_histogram(ts.Ljerk,peaks,ts.conf.hist_bins);
         end
@@ -516,10 +502,8 @@ classdef TimeSeriesBimanual < handle
         function Rx_hist = get.Rx_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Rx_hist=get_ts_histogram(ts.Rx,peaks,ts.conf.hist_bins);
         end
@@ -528,10 +512,8 @@ classdef TimeSeriesBimanual < handle
         function Rv_hist = get.Rv_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Rv_hist=get_ts_histogram(ts.Rv,peaks,ts.conf.hist_bins);
         end
@@ -540,10 +522,8 @@ classdef TimeSeriesBimanual < handle
         function Ra_hist = get.Ra_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Ra_hist=get_ts_histogram(ts.Ra,peaks,ts.conf.hist_bins);
         end
@@ -552,10 +532,8 @@ classdef TimeSeriesBimanual < handle
         function Rjerk_hist = get.Rjerk_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Rjerk_hist=get_ts_histogram(ts.Rjerk,peaks,ts.conf.hist_bins);
         end
@@ -564,106 +542,88 @@ classdef TimeSeriesBimanual < handle
         function Lxnorm_hist = get.Lxnorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
-            Lxnorm_hist=get_ts_histogram(ts.Lxnorm,peaks,ts.conf.hist_bins);
+            Lxnorm_hist=normalize(get_ts_histogram(ts.Lxnorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Lvnorm_hist = get.Lvnorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
-            Lvnorm_hist=get_ts_histogram(ts.Lvnorm,peaks,ts.conf.hist_bins);
+            Lvnorm_hist=normalize(get_ts_histogram(ts.Lvnorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Lanorm_hist = get.Lanorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
-            Lanorm_hist=get_ts_histogram(ts.Lanorm,peaks,ts.conf.hist_bins);
+            Lanorm_hist=normalize(get_ts_histogram(ts.Lanorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Ljerknorm_hist = get.Ljerknorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
-            Ljerknorm_hist=get_ts_histogram(ts.Ljerknorm,peaks,ts.conf.hist_bins);
+            Ljerknorm_hist=normalize(get_ts_histogram(ts.Ljerknorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Rxnorm_hist = get.Rxnorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
-            Rxnorm_hist=get_ts_histogram(ts.Rxnorm,peaks,ts.conf.hist_bins);
+            Rxnorm_hist=normalize(get_ts_histogram(ts.Rxnorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Rvnorm_hist = get.Rvnorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
-            Rvnorm_hist=get_ts_histogram(ts.Rvnorm,peaks,ts.conf.hist_bins);
+            Rvnorm_hist=normalize(get_ts_histogram(ts.Rvnorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Ranorm_hist = get.Ranorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
-            Ranorm_hist=get_ts_histogram(ts.Ranorm,peaks,ts.conf.hist_bins);
+            Ranorm_hist=normalize(get_ts_histogram(ts.Ranorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Rjerknorm_hist = get.Rjerknorm_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
-            Rjerknorm_hist=get_ts_histogram(ts.Rjerknorm,peaks,ts.conf.hist_bins);
+            Rjerknorm_hist=normalize(get_ts_histogram(ts.Rjerknorm,peaks,ts.conf.hist_bins));
         end
         
         
         function Rph_hist = get.Rph_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Rph_hist=get_ts_histogram(ts.Rph,peaks,ts.conf.hist_bins,1);
         end
@@ -672,10 +632,8 @@ classdef TimeSeriesBimanual < handle
         function Lph_hist = get.Lph_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lph_hist=get_ts_histogram(ts.Lph,peaks,ts.conf.hist_bins,1);
         end
@@ -684,10 +642,8 @@ classdef TimeSeriesBimanual < handle
         function Romega_hist = get.Romega_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Romega_hist=get_ts_histogram(ts.Romega,peaks,ts.conf.hist_bins);
         end
@@ -696,22 +652,37 @@ classdef TimeSeriesBimanual < handle
         function Lomega_hist = get.Lomega_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lomega_hist=get_ts_histogram(ts.Lomega,peaks,ts.conf.hist_bins);
         end
         
+        function Romeganorm_hist = get.Romeganorm_hist(ts)
+            if strcmp(ts.conf.hist_peaks,'x')
+                peaks=ts.Rpeaks;
+            elseif strcmp(ts.conf.hist_peaks,'v')
+                peaks=ts.Rvpeaks;
+            end
+            Romeganorm_hist=normalize(get_ts_histogram(ts.Romega,peaks,ts.conf.hist_bins));
+        end
+        
+        
+        function Lomeganorm_hist = get.Lomeganorm_hist(ts)
+            if strcmp(ts.conf.hist_peaks,'x')
+                peaks=ts.Lpeaks;
+            elseif strcmp(ts.conf.hist_peaks,'v')
+                peaks=ts.Lvpeaks;
+            end
+            Lomeganorm_hist=normalize(get_ts_histogram(ts.Lomega,peaks,ts.conf.hist_bins));
+        end
+                
         
         function Ralpha_hist = get.Ralpha_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Ralpha_hist=get_ts_histogram(ts.Ralpha,peaks,ts.conf.hist_bins);
         end
@@ -720,10 +691,8 @@ classdef TimeSeriesBimanual < handle
         function Lalpha_hist = get.Lalpha_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lalpha_hist=get_ts_histogram(ts.Lalpha,peaks,ts.conf.hist_bins);
         end
@@ -732,10 +701,8 @@ classdef TimeSeriesBimanual < handle
         function Ramp_hist = get.Ramp_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Rpeaks;
-                tsp=ts.Rx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Rvpeaks;
-                tsp=ts.Rv;
             end
             Ramp_hist=get_ts_histogram(ts.Ramp,peaks,ts.conf.hist_bins);
         end
@@ -744,140 +711,167 @@ classdef TimeSeriesBimanual < handle
         function Lamp_hist = get.Lamp_hist(ts)
             if strcmp(ts.conf.hist_peaks,'x')
                 peaks=ts.Lpeaks;
-                tsp=ts.Lx;
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.Lvpeaks;
-                tsp=ts.Lv;
             end
             Lamp_hist=get_ts_histogram(ts.Lams,peaks,ts.conf.hist_bins);
         end
         
+        function Rampnorm_hist = get.Rampnorm_hist(ts)
+            if strcmp(ts.conf.hist_peaks,'x')
+                peaks=ts.Rpeaks;
+            elseif strcmp(ts.conf.hist_peaks,'v')
+                peaks=ts.Rvpeaks;
+            end
+            Rampnorm_hist=normalize(get_ts_histogram(ts.Ramp,peaks,ts.conf.hist_bins));
+        end
         
-
+        
+        function Lampnorm_hist = get.Lampnorm_hist(ts)
+            if strcmp(ts.conf.hist_peaks,'x')
+                peaks=ts.Lpeaks;
+            elseif strcmp(ts.conf.hist_peaks,'v')
+                peaks=ts.Lvpeaks;
+            end
+            Lampnorm_hist=normalize(get_ts_histogram(ts.Lamp,peaks,ts.conf.hist_bins));
+        end        
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
         function Lxraw_phhist = get.Lxraw_phhist(ts)
-            Lxraw_phhist=get_ph_histogram(ts.Lxraw,ts.Lphpeaks,ts.conf.hist_bins);
+            Lxraw_phhist=get_ph_histogram(ts.Lxraw,ts.Lph,ts.conf.hist_bins);
         end
         
         function Lvraw_phhist = get.Lvraw_phhist(ts)
-            Lvraw_phhist=get_ph_histogram(ts.Lvraw,ts.Lphpeaks,ts.conf.hist_bins);
+            Lvraw_phhist=get_ph_histogram(ts.Lvraw,ts.Lph,ts.conf.hist_bins);
         end
         
         function Laraw_phhist = get.Laraw_phhist(ts)
-            Laraw_phhist=get_ph_histogram(ts.Laraw,ts.Lphpeaks,ts.conf.hist_bins);
+            Laraw_phhist=get_ph_histogram(ts.Laraw,ts.Lph,ts.conf.hist_bins);
         end
         
         function Rxraw_phhist = get.Rxraw_phhist(ts)
-            Rxraw_phhist=get_ph_histogram(ts.Rxraw,ts.Rphpeaks,ts.conf.hist_bins);
+            Rxraw_phhist=get_ph_histogram(ts.Rxraw,ts.Rph,ts.conf.hist_bins);
         end
         
         function Rvraw_phhist = get.Rvraw_phhist(ts)
-            Rvraw_phhist=get_ph_histogram(ts.Rvraw,ts.Rphpeaks,ts.conf.hist_bins);
+            Rvraw_phhist=get_ph_histogram(ts.Rvraw,ts.Rph,ts.conf.hist_bins);
         end
         
         function Raraw_phhist = get.Raraw_phhist(ts)
-            Raraw_phhist=get_ph_histogram(ts.Raraw,ts.Rphpeaks,ts.conf.hist_bins);
+            Raraw_phhist=get_ph_histogram(ts.Raraw,ts.Rph,ts.conf.hist_bins);
         end
         
         function Lx_phhist = get.Lx_phhist(ts)
-            Lx_phhist=get_ph_histogram(ts.Lx,ts.Lphpeaks,ts.conf.hist_bins);
+            Lx_phhist=get_ph_histogram(ts.Lx,ts.Lph,ts.conf.hist_bins);
         end        
         
         function Lv_phhist = get.Lv_phhist(ts)
-            Lv_phhist=get_ph_histogram(ts.Lv,ts.Lphpeaks,ts.conf.hist_bins);
+            Lv_phhist=get_ph_histogram(ts.Lv,ts.Lph,ts.conf.hist_bins);
         end        
         
         function La_phhist = get.La_phhist(ts)
-            La_phhist=get_ph_histogram(ts.La,ts.Lphpeaks,ts.conf.hist_bins);
+            La_phhist=get_ph_histogram(ts.La,ts.Lph,ts.conf.hist_bins);
         end        
         
         function Ljerk_phhist = get.Ljerk_phhist(ts)
-            Ljerk_phhist=get_ph_histogram(ts.Ljerk,ts.Lphpeaks,ts.conf.hist_bins);
+            Ljerk_phhist=get_ph_histogram(ts.Ljerk,ts.Lph,ts.conf.hist_bins);
         end        
         
         function Rx_phhist = get.Rx_phhist(ts)
-            Rx_phhist=get_ph_histogram(ts.Rx,ts.Rphpeaks,ts.conf.hist_bins);
+            Rx_phhist=get_ph_histogram(ts.Rx,ts.Rph,ts.conf.hist_bins);
         end        
         
         function Rv_phhist = get.Rv_phhist(ts)
-            Rv_phhist=get_ph_histogram(ts.Rv,ts.Rphpeaks,ts.conf.hist_bins);
+            Rv_phhist=get_ph_histogram(ts.Rv,ts.Rph,ts.conf.hist_bins);
         end        
         
         function Ra_phhist = get.Ra_phhist(ts)
-            Ra_phhist=get_ph_histogram(ts.Ra,ts.Rphpeaks,ts.conf.hist_bins);
+            Ra_phhist=get_ph_histogram(ts.Ra,ts.Rph,ts.conf.hist_bins);
         end        
         
         function Rjerk_phhist = get.Rjerk_phhist(ts)
-            Rjerk_phhist=get_ph_histogram(ts.Rjerk,ts.Rphpeaks,ts.conf.hist_bins);
+            Rjerk_phhist=get_ph_histogram(ts.Rjerk,ts.Rph,ts.conf.hist_bins);
         end        
         
         function Lxnorm_phhist = get.Lxnorm_phhist(ts)
-            Lxnorm_phhist=get_ph_histogram(ts.Lxnorm,ts.Lphpeaks,ts.conf.hist_bins);
+            Lxnorm_phhist=normalize(get_ph_histogram(ts.Lxnorm,ts.Lph,ts.conf.hist_bins));
         end        
         
         function Lvnorm_phhist = get.Lvnorm_phhist(ts)
-            Lvnorm_phhist=get_ph_histogram(ts.Lvnorm,ts.Lphpeaks,ts.conf.hist_bins);
+            Lvnorm_phhist=normalize(get_ph_histogram(ts.Lvnorm,ts.Lph,ts.conf.hist_bins));
         end        
         
         function Lanorm_phhist = get.Lanorm_phhist(ts)
-            Lanorm_phhist=get_ph_histogram(ts.Lanorm,ts.Lphpeaks,ts.conf.hist_bins);
+            Lanorm_phhist=normalize(get_ph_histogram(ts.Lanorm,ts.Lph,ts.conf.hist_bins));
         end        
         
         function Ljerknorm_phhist = get.Ljerknorm_phhist(ts)
-            Ljerknorm_phhist=get_ph_histogram(ts.Ljerknorm,ts.Lphpeaks,ts.conf.hist_bins);
+            Ljerknorm_phhist=normalize(get_ph_histogram(ts.Ljerknorm,ts.Lph,ts.conf.hist_bins));
         end
                 
         function Rxnorm_phhist = get.Rxnorm_phhist(ts)
-            Rxnorm_phhist=get_ph_histogram(ts.Rxnorm,ts.Rphpeaks,ts.conf.hist_bins);
+            Rxnorm_phhist=normalize(get_ph_histogram(ts.Rxnorm,ts.Rph,ts.conf.hist_bins));
         end        
         
         function Rvnorm_phhist = get.Rvnorm_phhist(ts)
-            Rvnorm_phhist=get_ph_histogram(ts.Rvnorm,ts.Lphpeaks,ts.conf.hist_bins);
+            Rvnorm_phhist=normalize(get_ph_histogram(ts.Rvnorm,ts.Rph,ts.conf.hist_bins));
         end        
         
         function Ranorm_phhist = get.Ranorm_phhist(ts)
-            Ranorm_phhist=get_ph_histogram(ts.Ranorm,ts.Rphpeaks,ts.conf.hist_bins);
+            Ranorm_phhist=normalize(get_ph_histogram(ts.Ranorm,ts.Rph,ts.conf.hist_bins));
         end        
         
         function Rjerknorm_phhist = get.Rjerknorm_phhist(ts)
-            Rjerknorm_phhist=get_ph_histogram(ts.Ramp,ts.Lphpeaks,ts.conf.hist_bins);
+            Rjerknorm_phhist=normalize(get_ph_histogram(ts.Rjerknorm,ts.Rph,ts.conf.hist_bins));
         end        
         
         function Rph_phhist = get.Rph_phhist(ts)
-            %Rph_phhist=get_ph_histogram(ts.Rph,ts.Rphpeaks,ts.conf.hist_bins,1);
             Rph_phhist=linspace(-pi,pi,ts.conf.hist_bins)';
         end        
         
         function Lph_phhist = get.Lph_phhist(ts)
-            %Lph_phhist=get_ph_histogram(ts.Lph,ts.Lphpeaks,ts.conf.hist_bins,1);
             Lph_phhist=linspace(-pi,pi,ts.conf.hist_bins)';
         end        
         
         function Romega_phhist = get.Romega_phhist(ts)
-            Romega_phhist=get_ph_histogram(ts.Romega,ts.Rphpeaks,ts.conf.hist_bins);
+            Romega_phhist=get_ph_histogram(ts.Romega,ts.Rph,ts.conf.hist_bins);
         end        
+        
+        function Romeganorm_phhist = get.Romeganorm_phhist(ts)
+            Romeganorm_phhist=normalize(get_ph_histogram(ts.Romega,ts.Rph,ts.conf.hist_bins));
+        end     
         
         function Lomega_phhist = get.Lomega_phhist(ts)
-            Lomega_phhist=get_ph_histogram(ts.Lomega,ts.Lphpeaks,ts.conf.hist_bins);
+            Lomega_phhist=get_ph_histogram(ts.Lomega,ts.Lph,ts.conf.hist_bins);
         end        
         
+        function Lomeganorm_phhist = get.Lomeganorm_phhist(ts)
+            Lomeganorm_phhist=normalize(get_ph_histogram(ts.Lomega,ts.Lph,ts.conf.hist_bins));
+        end     
+        
         function Ralpha_phhist = get.Ralpha_phhist(ts)
-            Ralpha_phhist=get_ph_histogram(ts.Ralpha,ts.Rphpeaks,ts.conf.hist_bins);
+            Ralpha_phhist=get_ph_histogram(ts.Ralpha,ts.Rph,ts.conf.hist_bins);
         end       
         
         function Lalpha_phhist = get.Lalpha_phhist(ts)
-            Lalpha_phhist=get_ph_histogram(ts.Lalpha,ts.Lphpeaks,ts.conf.hist_bins);
+            Lalpha_phhist=get_ph_histogram(ts.Lalpha,ts.Lph,ts.conf.hist_bins);
         end        
         
         function Ramp_phhist = get.Ramp_phhist(ts)
-            Ramp_phhist=get_ph_histogram(ts.Ramp,ts.Rphpeaks,ts.conf.hist_bins);
+            Ramp_phhist=get_ph_histogram(ts.Ramp,ts.Rph,ts.conf.hist_bins);
         end        
         
         function Lamp_phhist = get.Lamp_phhist(ts)
-            Lamp_phhist=get_ph_histogram(ts.Lamp,ts.Lphpeaks,ts.conf.hist_bins);
+            Lamp_phhist=get_ph_histogram(ts.Lamp,ts.Lph,ts.conf.hist_bins);
         end        
         
+        function Rampnorm_phhist = get.Rampnorm_phhist(ts)
+            Rampnorm_phhist=normalize(get_ph_histogram(ts.Ramp,ts.Rph,ts.conf.hist_bins));
+        end        
         
+        function Lampnorm_phhist = get.Lampnorm_phhist(ts)
+            Lampnorm_phhist=normalize(get_ph_histogram(ts.Lamp,ts.Lph,ts.conf.hist_bins));
+        end         
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Peak finding and valid index computation code
@@ -1054,3 +1048,4 @@ classdef TimeSeriesBimanual < handle
     end % methods
     
 end% classdef
+

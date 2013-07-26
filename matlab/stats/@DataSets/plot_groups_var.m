@@ -3,7 +3,7 @@ function plot_groups_var(ds,gpc,vname)
         %One-handed variables: Iterate over both hands, one plot per hand
         data_orig=gpc.data;
         for hand=1:length(gpc.hnames)
-            figname = [vname,' ',gpc.hnames{hand}];                        
+            figname = [vname,'_',gpc.hnames{hand}];                        
             gpc.data=squeeze(data_orig(hand,:,:,:,:,:));
             plot_(ds,gpc,figname);
         end
@@ -100,7 +100,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function savefig(ds, figname)
-    if strfind('\phi_{\sigma}',figname)
+    if strfind('phi_{',figname)
         figname='phasediffstd';
     end
     figname = joinpath(ds.savepath,figname);

@@ -9,7 +9,7 @@ classdef Config < handle
         plot_path
         anal_path
         scripts_path = '/home/jorge/Dropbox/dev/Bimanual-Fitts'
-        branch_path  = '26062013' % Unique name to identify this specific config
+        branch_path  = '22072013' % Unique name to identify this specific config
         name=''         %Participant directory name
         number=1        %Session number
         blockpath=''    %Block path
@@ -45,7 +45,7 @@ classdef Config < handle
         
         %Canonical histograms properties
         hist_peaks = 'x'
-        hist_bins = 100
+        hist_bins = 500
         
         %LockingStrength properties
         peak_delta=2;

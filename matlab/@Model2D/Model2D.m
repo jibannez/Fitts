@@ -50,6 +50,9 @@ classdef Model2D < handle
         phsindot  
         phdiff
         omeganorm
+        d4D
+        fs
+        pdelay
         %Peaks and indexes
         x1peaks
         v1peaks
@@ -59,6 +62,7 @@ classdef Model2D < handle
         v2peaks
         ph2peaks        
         idx2
+        idx
         %Nullclines and vector fields 
         ph1nc
         ph2nc
@@ -256,7 +260,14 @@ classdef Model2D < handle
                            -mdl.phdot(:,2)./max(abs(mdl.phdot(:,2)))];
             end
         end
-        
+
+        function d4D = get.d4D(mdl)
+            if mdl.stype<2
+                d4D=[];
+            else
+                d4D=sqrt( (mdl.phcos(:,1)-mdl.phcos(:,2)).^2 + (mdl.phcosdot(:,1)-mdl.phcosdot(:,2)).^2);
+            end
+        end        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %Peaks and indexes
         
@@ -339,6 +350,73 @@ classdef Model2D < handle
             end
         end   
         
+        function fs = get.fs(mdl)
+            fs=floor(1/mean(diff(mdl.t)));
+        end
+            
+        function idx = get.idx(mdl)
+            [maxRPeaks, minRPeaks] = peakdet(mdl.phcos(:,2), mdl.conf.peak_size);
+            Rpeaks = sort([maxRPeaks(:,1);minRPeaks(:,1)]);
+            [maxLPeaks, minLPeaks] = peakdet(mdl.phcos(:,1), mdl.conf.peak_size);
+            Lpeaks = sort([maxLPeaks(:,1);minLPeaks(:,1)]);
+            if length(Lpeaks) < length(Rpeaks)
+                idx=Lpeaks(1,1):Lpeaks(end,1);
+            else
+                idx=Rpeaks(1,1):Rpeaks(end,1);
+            end
+        end        
+        
+        function pdelay = get.pdelay(mdl)
+            Rpeaks=mdl.x2peaks;
+            Lpeaks=mdl.x1peaks;
+            Rlen = length(Rpeaks)-1;  %Extreme are always zeros!
+            Llen = length(Lpeaks)-1;
+            if Llen<Rlen
+                q=round(Rlen/Llen);
+                pdelay=zeros(Llen,1);
+                for i=1:Llen
+                    L=Lpeaks(i);
+                    if q==1
+                        if i==1
+                            R=Rpeaks(1:i+1);
+                        else
+                            R=Rpeaks(i-1:i+1);
+                        end
+                    elseif (i*(q-1))<1
+                        R=Rpeaks(1:i*(q+1));
+                    elseif (i*(q+1))>Rlen
+                        R=Rpeaks(i*(q-1):Rlen);
+                    else
+                        R=Rpeaks(i*(q-1):i*(q+1));
+                    end
+                    abs(L-R);
+                    [d,j]=min(abs(L-R));
+                    pdelay(i)=d*sign(L-R(j))/1000;
+                end
+            else
+                q=round(Llen/Rlen);
+                pdelay=zeros(Rlen,1);
+                for i=1:Rlen
+                    R=Rpeaks(i);
+                    if q==1
+                        if i==1
+                            L=Lpeaks(1:i+1);
+                        else
+                            L=Lpeaks(i-1:i+1);
+                        end
+                    elseif (i*(q-1))<1
+                        L=Lpeaks(1:i*(q+1));
+                    elseif (i*(q+1))>Llen
+                        L=Lpeaks(i*(q-1):Llen);
+                    else
+                        L=Lpeaks(i*(q-1):i*(q+1));
+                    end
+                    [d,j]=min(abs(R-L));
+                    pdelay(i)=d*sign(L(j)-R);
+                end
+            end
+            pdelay=pdelay/mdl.fs;
+        end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %Vector Fields, potentials and nullcline getters
@@ -448,15 +526,15 @@ classdef Model2D < handle
         %Kinematic time series
         
         function x1 = get.x1(mdl)
-            x1=mdl.phcos(mdl.idx1,1);
+            x1=mdl.phcos(mdl.idx,1);
         end
         
         function v1 = get.v1(mdl)
-            v1=[0;diff(mdl.x1)./diff(mdl.t(mdl.idx1))];
+            v1=[0;diff(mdl.x1)./diff(mdl.t(mdl.idx))];
         end
         
         function a1 = get.a1(mdl)
-            a1=[0;diff(mdl.v1)./diff(mdl.t(mdl.idx1))];
+            a1=[0;diff(mdl.v1)./diff(mdl.t(mdl.idx))];
         end
         
         function xnorm1 = get.xnorm1(mdl)
@@ -474,15 +552,15 @@ classdef Model2D < handle
         
         
         function x2 = get.x2(mdl)
-            x2=mdl.phcos(mdl.idx2,2);
+            x2=mdl.phcos(mdl.idx,2);
         end
         
         function v2 = get.v2(mdl)
-            v2=[0;diff(mdl.x2)./diff(mdl.t(mdl.idx2))];
+            v2=[0;diff(mdl.x2)./diff(mdl.t(mdl.idx))];
         end
         
         function a2 = get.a2(mdl)
-            a2=[0;diff(mdl.v2)./diff(mdl.t(mdl.idx2))];
+            a2=[0;diff(mdl.v2)./diff(mdl.t(mdl.idx))];
         end
         
         function xnorm2 = get.xnorm2(mdl)

@@ -1,0 +1,49 @@
+[1] "Summary by group"
+  grp vfTrajCircularity.m vfTrajCircularity.s
+1   C           0.8065334           0.0723008
+2   U           0.8087303           0.0539490
+[1] "Summary by session\n"
+  S vfTrajCircularity.m vfTrajCircularity.s
+1 1           0.7945863          0.05977808
+2 2           0.8073747          0.06587652
+3 3           0.8209347          0.06335029
+[1] "Summary by ID\n"
+  ID vfTrajCircularity.m vfTrajCircularity.s
+1  D           0.8441003          0.03621878
+2  E           0.7711634          0.06433319
+[1] "Summary by group + Session\n"
+  grp S vfTrajCircularity.m vfTrajCircularity.s
+1   C 1           0.7946410          0.07628579
+2   C 2           0.8051517          0.07455656
+3   C 3           0.8198077          0.06583282
+4   U 1           0.7945317          0.03808585
+5   U 2           0.8095977          0.05709792
+6   U 3           0.8220617          0.06187341
+[1] "Summary by Session + ID\n"
+  S ID vfTrajCircularity.m vfTrajCircularity.s
+1 1  D           0.8247420          0.04253926
+2 1  E           0.7644307          0.05982498
+3 2  D           0.8513650          0.02854114
+4 2  E           0.7633843          0.06333027
+5 3  D           0.8561940          0.02842746
+6 3  E           0.7856753          0.06917085
+[1] "Summary by group + ID\n"
+  grp ID vfTrajCircularity.m vfTrajCircularity.s
+1   C  D           0.8475709          0.03710458
+2   C  E           0.7654960          0.07584308
+3   U  D           0.8406298          0.03538399
+4   U  E           0.7768309          0.05053423
+[1] "Summary by group + Session + ID\n"
+   grp S ID vfTrajCircularity.m vfTrajCircularity.s
+1    C 1  D           0.8376807          0.04475719
+2    C 1  E           0.7516013          0.07798757
+3    C 2  D           0.8525173          0.03210057
+4    C 2  E           0.7577860          0.07534222
+5    C 3  D           0.8525147          0.03370564
+6    C 3  E           0.7871007          0.07449230
+7    U 1  D           0.8118033          0.03723564
+8    U 1  E           0.7772600          0.03128808
+9    U 2  D           0.8502127          0.02557512
+10   U 2  E           0.7689827          0.05063908
+11   U 3  D           0.8598733          0.02255849
+12   U 3  E           0.7842500          0.06601146

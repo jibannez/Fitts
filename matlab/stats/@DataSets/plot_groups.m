@@ -54,7 +54,7 @@ function plot_groups(ds,factors,idx)
                 vname=[vstrs{v},'_{rel} ',units{v}];
             end
             fprintf('Plotting variable Relative %s\n',titles{v})
-            ds.plot_groups_var(GroupPlotConfig(vname,bi,un,factors),['Relative ',titles{v}]);
+            ds.plot_groups_var(GroupPlotConfig(vname,bi,un,factors),['Relative_',titles{v}]);
         end
     end
 end

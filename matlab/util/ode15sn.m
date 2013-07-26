@@ -360,12 +360,12 @@ difU = difU(maxK,maxK);
 maxit = 4;
 
 % The input arguments of odefile determine the args to use to evaluate f.
-if (exist(odefile) == 3) | (exist(odefile) == 2) | (nargin(odefile) == 2) % don't nargin MEX files
-  args = {};                            % odefile accepts only (t,y)
-else
-  args = [{''} varargin];               % use (t,y,'',p1,p2,...)
-end
-
+% if (exist(odefile) == 3) | (exist(odefile) == 2) | (nargin(odefile) == 2) % don't nargin MEX files
+%   args = {};                            % odefile accepts only (t,y)
+% else
+%   args = [{''} varargin];               % use (t,y,'',p1,p2,...)
+% end
+args = [{''} varargin];
 f0 = feval(odefile,t,y,args{:});
 nfevals = nfevals + 1;                  % stats
 [m,n] = size(f0);

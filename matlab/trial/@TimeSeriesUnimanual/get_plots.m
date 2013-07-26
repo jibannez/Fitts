@@ -51,7 +51,7 @@ function  plot_time_series(ts,ax)
         %plot(ts.anorm, 'm');
         %plot(ts.jerknorm, 'c');
         plot(ts.ph/pi,'k--');
-        plot(2*ts.omega/max(abs(ts.omega))+1,'g')
+        plot(ts.omega/min(ts.omega),'g')
         %plot(ts.alpha/max(ts.alpha), 'k');        
         %legend({'xnorm','vnorm','anorm','jerknorm','phnorm','omeganorm','alphanorm'})
         legend({'xnorm','vnorm','phnorm','omeganorm'})
