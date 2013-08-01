@@ -26,7 +26,7 @@ classdef ModelMonostable < handle
         ppset
         icset
         bins
-        phhist_range=-pi:pi/100:pi;
+        phhist_range
         
         %Vector field and nullcline related variables
         vfrange
@@ -199,6 +199,7 @@ classdef ModelMonostable < handle
             mdl.icset={};
             mdl.setup();
             mdl.setcallbacks();
+            mdl.phhist_range=-pi:mdl.conf.bins:pi;
         end
         
         
@@ -234,10 +235,10 @@ classdef ModelMonostable < handle
         function pfit=fit(mdl,tr,do_plot)
             if nargin<3, do_plot=1; end
 
-            if mdl.stype == 2 
-                pfit=mdl.fit_trial2D(tr,do_plot);
-            else
+            if mdl.stype < 2 
                 pfit=mdl.fit_trial1D(tr,do_plot);
+            else
+                pfit=mdl.fit_trial2D(tr,do_plot);
             end
         end
 
@@ -286,10 +287,13 @@ classdef ModelMonostable < handle
         function phdot = get.phdot(mdl)
             if mdl.stype<2
                 phdot=diff(mdl.ph)./diff(mdl.t);
+                %phdot=filterdata([phdot(1);phdot],12,mdl.fs/2);
                 phdot=[phdot(1);phdot];
             else
-                phdot=[diff(mdl.ph(:,1))./diff(mdl.t),...
-                       diff(mdl.ph(:,2))./diff(mdl.t)];
+%                 phdot=[filterdata(diff(mdl.ph(:,1))*mdl.fs,12,mdl.fs/2),...
+%                        filterdata(diff(mdl.ph(:,2))*mdl.fs,12,mdl.fs/2)];
+                phdot=[diff(mdl.ph(:,1))*mdl.fs,...
+                       diff(mdl.ph(:,2))*mdl.fs];
                 phdot=[phdot(1,:);phdot];
             end
         end
@@ -467,7 +471,11 @@ classdef ModelMonostable < handle
         end   
         
         function fs = get.fs(mdl)
-            fs=floor(1/mean(diff(mdl.t)));
+            if isempty(mdl.t)
+                fs=100;
+            else
+                fs=floor(1/mean(diff(mdl.t)));
+            end
         end
             
         function idx = get.idx(mdl)
@@ -516,7 +524,7 @@ classdef ModelMonostable < handle
                         R=Rpeaks(i*(q-1):i*(q+1));
                     end
                     [d,j]=min(abs(L-R));
-                    pdelay(i)=d*sign(L-R(j))/100;
+                    pdelay(i)=d*sign(L-R(j));
                 end
             else
                 q=round(Llen/Rlen);
@@ -537,7 +545,7 @@ classdef ModelMonostable < handle
                         L=Lpeaks(i*(q-1):i*(q+1));
                     end
                     [d,j]=min(abs(R-L));
-                    pdelay(i)=d*sign(L(j)-R)/100;
+                    pdelay(i)=d*sign(L(j)-R);
                 end
             end
             pdelay=pdelay/mdl.fs;
@@ -558,67 +566,67 @@ classdef ModelMonostable < handle
         end
         
         function xnorm = get.xnorm(mdl)
-            xnorm=mdl.x./max(abs(mdl.x));
+            xnorm=normalize(mdl.x);
         end
         
         function vnorm = get.vnorm(mdl)
-            vnorm=mdl.v./max(abs(mdl.v));
+            vnorm=normalize(mdl.v);
         end
         
         function anorm = get.anorm(mdl)
-            anorm=mdl.a./max(abs(mdl.a));
+            anorm=normalize(mdl.a);
         end
         
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function x1 = get.x1(mdl)
-            x1=mdl.phcos(mdl.idx,1);
+            x1=mdl.phcos(mdl.idx1,1);
         end
         
         function v1 = get.v1(mdl)
-            v1=[0;diff(mdl.x1)./diff(mdl.t(mdl.idx))];
+            v1=[0;diff(mdl.x1)./diff(mdl.t(mdl.idx1))];
         end
         
         function a1 = get.a1(mdl)
-            a1=[0;diff(mdl.v1)./diff(mdl.t(mdl.idx))];
+            a1=[0;diff(mdl.v1)./diff(mdl.t(mdl.idx1))];
         end
         
         function xnorm1 = get.xnorm1(mdl)
-            xnorm1=mdl.x1./max(abs(mdl.x1));
+            xnorm1=normalize(mdl.x1);
         end
         
         function vnorm1 = get.vnorm1(mdl)
-            vnorm1=mdl.v1./max(abs(mdl.v1));
+            vnorm1=normalize(mdl.v1);
         end
         
         function anorm1 = get.anorm1(mdl)
-            anorm1=mdl.a1./max(abs(mdl.a1));
+            anorm1=normalize(mdl.a1);
         end
         
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function x2 = get.x2(mdl)
-            x2=mdl.phcos(mdl.idx,2);
+            x2=mdl.phcos(mdl.idx2,2);
         end
         
         function v2 = get.v2(mdl)
-            v2=[0;diff(mdl.x2)./diff(mdl.t(mdl.idx))];
+            v2=[0;diff(mdl.x2)./diff(mdl.t(mdl.idx2))];
         end
         
         function a2 = get.a2(mdl)
-            a2=[0;diff(mdl.v2)./diff(mdl.t(mdl.idx))];
+            a2=[0;diff(mdl.v2)./diff(mdl.t(mdl.idx2))];
         end
         
         function xnorm2 = get.xnorm2(mdl)
-            xnorm2=mdl.x2./max(abs(mdl.x2));
+            xnorm2=normalize(mdl.x2);
         end
         
         function vnorm2 = get.vnorm2(mdl)
-            vnorm2=mdl.v2./max(abs(mdl.v2));
+            vnorm2=normalize(mdl.v2);
         end
         
         function anorm2 = get.anorm2(mdl)
-            anorm2=mdl.a2./max(abs(mdl.a2));
+            anorm2=normalize(mdl.a2);
         end
         
         
@@ -637,15 +645,15 @@ classdef ModelMonostable < handle
         end
 
         function xnorm_hist = get.xnorm_hist(mdl)
-            xnorm_hist = get_ts_histogram(mdl.xnorm,mdl.xpeaks,mdl.conf.bins);
+            xnorm_hist = normalize(get_ts_histogram(mdl.x,mdl.xpeaks,mdl.conf.bins));
         end
         
         function vnorm_hist = get.vnorm_hist(mdl)
-            vnorm_hist = get_ts_histogram(mdl.vnorm,mdl.xpeaks,mdl.conf.bins);
+            vnorm_hist = normalize(get_ts_histogram(mdl.v,mdl.xpeaks,mdl.conf.bins));
         end
         
         function anorm_hist = get.anorm_hist(mdl)
-            anorm_hist = get_ts_histogram(mdl.anorm,mdl.xpeaks,mdl.conf.bins);
+            anorm_hist = normalize(get_ts_histogram(mdl.a,mdl.xpeaks,mdl.conf.bins));
         end        
         
         function ph_hist=get.ph_hist(mdl)
@@ -657,7 +665,7 @@ classdef ModelMonostable < handle
         end
         
         function omeganorm_hist=get.omeganorm_hist(mdl)
-            omeganorm_hist=get_ts_histogram(mdl.omeganorm,mdl.xpeaks,mdl.conf.bins);
+            omeganorm_hist=normalize(get_ts_histogram(mdl.phdot,mdl.xpeaks,mdl.conf.bins));
         end
         
         
@@ -676,15 +684,15 @@ classdef ModelMonostable < handle
         end
 
         function xnorm1_hist = get.xnorm1_hist(mdl)
-            xnorm1_hist = get_ts_histogram(mdl.xnorm1,mdl.x1peaks,mdl.conf.bins);
+            xnorm1_hist = normalize(get_ts_histogram(mdl.x1,mdl.x1peaks,mdl.conf.bins));
         end
         
         function vnorm1_hist = get.vnorm1_hist(mdl)
-            vnorm1_hist = get_ts_histogram(mdl.vnorm1,mdl.x1peaks,mdl.conf.bins);
+            vnorm1_hist = normalize(get_ts_histogram(mdl.v1,mdl.x1peaks,mdl.conf.bins));
         end
         
         function anorm1_hist = get.anorm1_hist(mdl)
-            anorm1_hist = get_ts_histogram(mdl.anorm1,mdl.x1peaks,mdl.conf.bins);
+            anorm1_hist = normalize(get_ts_histogram(mdl.a1,mdl.x1peaks,mdl.conf.bins));
         end        
         
         function ph1_hist=get.ph1_hist(mdl)
@@ -696,7 +704,7 @@ classdef ModelMonostable < handle
         end
         
         function omeganorm1_hist=get.omeganorm1_hist(mdl)
-            omeganorm1_hist=get_ts_histogram(mdl.omeganorm(:,1),mdl.x1peaks,mdl.conf.bins);
+            omeganorm1_hist=normalize(get_ts_histogram(mdl.phdot(:,1),mdl.x1peaks,mdl.conf.bins));
         end
         
         
@@ -714,15 +722,15 @@ classdef ModelMonostable < handle
         end
 
         function xnorm2_hist = get.xnorm2_hist(mdl)
-            xnorm2_hist = get_ts_histogram(mdl.xnorm2,mdl.x2peaks,mdl.conf.bins);
+            xnorm2_hist = normalize(get_ts_histogram(mdl.x2,mdl.x2peaks,mdl.conf.bins));
         end
         
         function vnorm2_hist = get.vnorm2_hist(mdl)
-            vnorm2_hist = get_ts_histogram(mdl.vnorm2,mdl.x2peaks,mdl.conf.bins);
+            vnorm2_hist = normalize(get_ts_histogram(mdl.v2,mdl.x2peaks,mdl.conf.bins));
         end
         
         function anorm2_hist = get.anorm2_hist(mdl)
-            anorm2_hist = get_ts_histogram(mdl.anorm2,mdl.x2peaks,mdl.conf.bins);
+            anorm2_hist = normalize(get_ts_histogram(mdl.a2,mdl.x2peaks,mdl.conf.bins));
         end        
         
         function ph2_hist=get.ph2_hist(mdl)
@@ -734,7 +742,7 @@ classdef ModelMonostable < handle
         end
         
         function omeganorm2_hist=get.omeganorm2_hist(mdl)
-            omeganorm2_hist=get_ts_histogram(mdl.omeganorm(:,2),mdl.x2peaks,mdl.conf.bins);
+            omeganorm2_hist=normalize(get_ts_histogram(mdl.phdot(:,2),mdl.x2peaks,mdl.conf.bins));
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -756,11 +764,11 @@ classdef ModelMonostable < handle
         end
         
         function vnorm_phhist = get.vnorm_phhist(mdl)
-            vnorm_phhist=get_ph_histogram(mdl.vnorm,mdl.phmod(mdl.idx),mdl.conf.bins);
+            vnorm_phhist=normalize(get_ph_histogram(mdl.v,mdl.phmod(mdl.idx),mdl.conf.bins));
         end
 
         function anorm_phhist = get.anorm_phhist(mdl)
-            anorm_phhist=get_ph_histogram(mdl.anorm,mdl.phmod(mdl.idx),mdl.conf.bins);
+            anorm_phhist=normalize(get_ph_histogram(mdl.a,mdl.phmod(mdl.idx),mdl.conf.bins));
         end        
         
         function ph_phhist=get.ph_phhist(mdl)
@@ -773,7 +781,7 @@ classdef ModelMonostable < handle
         end        
         
         function omeganorm_phhist=get.omeganorm_phhist(mdl)
-            omeganorm_phhist=get_ph_histogram(mdl.omeganorm,mdl.phmod(mdl.idx),mdl.conf.bins);
+            omeganorm_phhist=normalize(get_ph_histogram(mdl.phdot,mdl.phmod,mdl.conf.bins));
         end
         
         
@@ -792,15 +800,15 @@ classdef ModelMonostable < handle
         end
         
         function xnorm1_phhist = get.xnorm1_phhist(mdl)
-            xnorm1_phhist=get_ph_histogram(mdl.xnorm1,mdl.phmod(mdl.idx1,1),mdl.conf.bins);
+            xnorm1_phhist=normalize(get_ph_histogram(mdl.x1,mdl.phmod(mdl.idx1,1),mdl.conf.bins));
         end
         
         function vnorm1_phhist = get.vnorm1_phhist(mdl)
-            vnorm1_phhist=get_ph_histogram(mdl.vnorm1,mdl.phmod(mdl.idx1,1),mdl.conf.bins);
+            vnorm1_phhist=normalize(get_ph_histogram(mdl.v1,mdl.phmod(mdl.idx1,1),mdl.conf.bins));
         end
 
         function anorm1_phhist = get.anorm1_phhist(mdl)
-            anorm1_phhist=get_ph_histogram(mdl.anorm1,mdl.phmod(mdl.idx1,1),mdl.conf.bins);
+            anorm1_phhist=normalize(get_ph_histogram(mdl.a1,mdl.phmod(mdl.idx1,1),mdl.conf.bins));
         end        
         
         function ph1_phhist=get.ph1_phhist(mdl)
@@ -813,7 +821,7 @@ classdef ModelMonostable < handle
         end        
         
         function omeganorm1_phhist=get.omeganorm1_phhist(mdl)
-            omeganorm1_phhist=get_ph_histogram(mdl.omeganorm(:,1),mdl.phmod(mdl.idx1,1),mdl.conf.bins);
+            omeganorm1_phhist=normalize(get_ph_histogram(mdl.phdot(:,1),mdl.phmod(:,1),mdl.conf.bins));
         end
         
         
@@ -831,15 +839,15 @@ classdef ModelMonostable < handle
         end
         
         function xnorm2_phhist = get.xnorm2_phhist(mdl)
-            xnorm2_phhist=get_ph_histogram(mdl.xnorm2,mdl.phmod(mdl.idx2,2),mdl.conf.bins);
+            xnorm2_phhist=normalize(get_ph_histogram(mdl.x2,mdl.phmod(mdl.idx2,2),mdl.conf.bins));
         end
         
         function vnorm2_phhist = get.vnorm2_phhist(mdl)
-            vnorm2_phhist=get_ph_histogram(mdl.vnorm2,mdl.phmod(mdl.idx2,2),mdl.conf.bins);
+            vnorm2_phhist=normalize(get_ph_histogram(mdl.v2,mdl.phmod(mdl.idx2,2),mdl.conf.bins));
         end
 
         function anorm2_phhist = get.anorm2_phhist(mdl)
-            anorm2_phhist=get_ph_histogram(mdl.anorm2,mdl.phmod(mdl.idx2,2),mdl.conf.bins);
+            anorm2_phhist=normalize(get_ph_histogram(mdl.a2,mdl.phmod(mdl.idx2,2),mdl.conf.bins));
         end        
         
         function ph2_phhist=get.ph2_phhist(mdl)
@@ -852,7 +860,7 @@ classdef ModelMonostable < handle
         end        
         
         function omeganorm2_phhist=get.omeganorm2_phhist(mdl)
-            omeganorm2_phhist=get_ph_histogram(mdl.omeganorm(:,2),mdl.phmod(mdl.idx2,2),mdl.conf.bins);
+            omeganorm2_phhist=normalize(get_ph_histogram(mdl.phdot(:,2),mdl.phmod(:,2),mdl.conf.bins));
         end        
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

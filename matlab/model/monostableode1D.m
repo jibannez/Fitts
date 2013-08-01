@@ -12,9 +12,14 @@ function dydt = monostableode1D(t,y,kk,w,a,b,c,d,tau)
     
     %Gaussian pulse properties
     I=0;                 %Pulse intensity, defaults to 0.
-    Imax=1/tau;        %Maximal pulse intensity
-    dmax=0.15/tau;       %Maximal pulse duration
-    sg=0.025/tau;            %Pulse intensity standart deviation
+%     Imax=1/tau;        %Maximal pulse intensity
+%     dmax=0.15/tau;       %Maximal pulse duration
+%     sg=0.025/tau;            %Pulse intensity standart deviation
+%     phthr=pi/3;          %Phase threshold to start a pulse
+%     tstart=1.5*sg;   %Advance in time to start a pulse
+    Imax=1;        %Maximal pulse intensity
+    dmax=0.15;       %Maximal pulse duration
+    sg=0.025;            %Pulse intensity standart deviation
     phthr=pi/3;          %Phase threshold to start a pulse
     tstart=1.5*sg;   %Advance in time to start a pulse
     
@@ -40,9 +45,10 @@ function dydt = monostableode1D(t,y,kk,w,a,b,c,d,tau)
         tpulse=0;    
     elseif tpulse > 0
         I=Imax*exp(-((t-(tpulse+tstart))^2)/(2*sg^2));
+    else
+        tpulse = 0;
     end
 
     %Compute differential equation
-    dydt=-tau*( w + a*sin(2*(y-c)+d) + b*cos(4*(y-c))+ I);
-
+    dydt=-1*( w + tau*(a*sin(2*(y-c)+d) + b*cos(4*(y-c))) + I);
 end

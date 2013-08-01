@@ -45,7 +45,7 @@ classdef Config < handle
         
         %Canonical histograms properties
         hist_peaks = 'x'
-        hist_bins = 500
+        hist_bins = 100
         
         %LockingStrength properties
         peak_delta=2;

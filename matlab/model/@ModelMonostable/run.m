@@ -5,6 +5,13 @@ function run(mdl)
     %    [mdl.t, mdl.ph] = mdl.ode(mdl.eq,mdl.tspan,mdl.IC,mdl.options,mdl.params{:});    
     %end
     clear(mdl.eq)
+    clear('ynoise')
     [mdl.t, mdl.ph] = mdl.ode(mdl.eq,mdl.tspan,mdl.IC,mdl.options,mdl.params{:});    
+    if mdl.stype<2
+        mdl.ph=filterdata(mdl.ph,24,50);
+    else
+        mdl.ph(:,1)=filterdata(mdl.ph(:,1),12,mdl.fs);
+        mdl.ph(:,2)=filterdata(mdl.ph(:,2),12,mdl.fs);
+    end
     if mdl.conf.plot, mdl.plot(); end
 end

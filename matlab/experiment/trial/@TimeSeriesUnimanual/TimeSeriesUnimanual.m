@@ -304,7 +304,7 @@ classdef TimeSeriesUnimanual < handle
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.vpeaks;
             end
-            xnorm_hist=normalize(get_ts_histogram(ts.xnorm,peaks,ts.conf.hist_bins));
+            xnorm_hist=normalize(get_ts_histogram(ts.x,peaks,ts.conf.hist_bins));
         end
         
         
@@ -314,7 +314,7 @@ classdef TimeSeriesUnimanual < handle
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.vpeaks;
             end
-            vnorm_hist=normalize(get_ts_histogram(ts.vnorm,peaks,ts.conf.hist_bins));
+            vnorm_hist=normalize(get_ts_histogram(ts.v,peaks,ts.conf.hist_bins));
         end
         
         
@@ -324,7 +324,7 @@ classdef TimeSeriesUnimanual < handle
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.vpeaks;
             end
-            anorm_hist=normalize(get_ts_histogram(ts.anorm,peaks,ts.conf.hist_bins));            
+            anorm_hist=normalize(get_ts_histogram(ts.a,peaks,ts.conf.hist_bins));            
         end
         
         
@@ -334,8 +334,7 @@ classdef TimeSeriesUnimanual < handle
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.vpeaks;
             end
-            jerknorm_hist=get_ts_histogram(ts.jerknorm,peaks,ts.conf.hist_bins);
-            jerknorm_hist=normalize(jerknorm_hist);
+            jerknorm_hist=normalize(get_ts_histogram(ts.jerk,peaks,ts.conf.hist_bins));            
         end
         
         
@@ -364,8 +363,7 @@ classdef TimeSeriesUnimanual < handle
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.vpeaks;
             end
-            omeganorm_hist=get_ts_histogram(ts.omeganorm,peaks,ts.conf.hist_bins);
-            omeganorm_hist=normalize(omeganorm_hist);
+            omeganorm_hist=normalize(get_ts_histogram(ts.omega,peaks,ts.conf.hist_bins));
         end
         
         function alpha_hist = get.alpha_hist(ts)
@@ -394,8 +392,7 @@ classdef TimeSeriesUnimanual < handle
             elseif strcmp(ts.conf.hist_peaks,'v')
                 peaks=ts.vpeaks;
             end
-            ampnorm_hist=get_ts_histogram(ts.ampnorm,peaks,ts.conf.hist_bins);
-            ampnorm_hist=normalize(ampnorm_hist);
+            ampnorm_hist=normalize(get_ts_histogram(ts.amp,peaks,ts.conf.hist_bins));
         end
         
         
@@ -436,26 +433,22 @@ classdef TimeSeriesUnimanual < handle
         
         
         function xnorm_phhist = get.xnorm_phhist(ts)
-            xnorm_phhist=get_ph_histogram(ts.xnorm,ts.ph,ts.conf.hist_bins);
-            xnorm_phhist=normalize(xnorm_phhist);
+            xnorm_phhist=normalize(get_ph_histogram(ts.x,ts.ph,ts.conf.hist_bins));
         end
         
         
         function vnorm_phhist = get.vnorm_phhist(ts)
-            vnorm_phhist=get_ph_histogram(ts.vnorm,ts.ph,ts.conf.hist_bins);
-            vnorm_phhist=normalize(vnorm_phhist);
+            vnorm_phhist=normalize(get_ph_histogram(ts.v,ts.ph,ts.conf.hist_bins));
         end
         
         
         function anorm_phhist = get.anorm_phhist(ts)
-            anorm_phhist=get_ph_histogram(ts.anorm,ts.ph,ts.conf.hist_bins);
-            anorm_phhist=normalize(anorm_phhist);
+            anorm_phhist=normalize(get_ph_histogram(ts.a,ts.ph,ts.conf.hist_bins));
         end
         
         
         function jerknorm_phhist = get.jerknorm_phhist(ts)
-            jerknorm_phhist=get_ph_histogram(ts.jerknorm,ts.ph,ts.conf.hist_bins);
-            jerknorm_phhist=normalize(jerknorm_phhist);
+            jerknorm_phhist=normalize(get_ph_histogram(ts.jerk,ts.ph,ts.conf.hist_bins));
         end
         
         function ph_phhist = get.ph_phhist(ts)
@@ -467,8 +460,7 @@ classdef TimeSeriesUnimanual < handle
         end
         
         function omeganorm_phhist = get.omeganorm_phhist(ts)
-            omeganorm_phhist=get_ph_histogram(ts.omeganorm,ts.ph,ts.conf.hist_bins);
-            omeganorm_phhist=normalize(omeganorm_phhist);
+            omeganorm_phhist=normalize(get_ph_histogram(ts.omega,ts.ph,ts.conf.hist_bins));
         end
         
         function alpha_phhist = get.alpha_phhist(ts)
@@ -481,8 +473,7 @@ classdef TimeSeriesUnimanual < handle
         end
         
         function ampnorm_phhist = get.ampnorm_phhist(ts)
-            ampnorm_phhist=get_ph_histogram(ts.ampnorm,ts.ph,ts.conf.hist_bins);
-            ampnorm_phhist=normalize(ampnorm_phhist);
+            ampnorm_phhist=normalize(get_ph_histogram(ts.amp,ts.ph,ts.conf.hist_bins));
         end
         
         
