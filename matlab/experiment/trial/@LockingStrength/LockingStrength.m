@@ -8,7 +8,7 @@ classdef LockingStrength < handle
         phDiffMean_
         phDiffStd_
         rho_
-        MI_
+        KLD_
         d4D_
         d3D_
         d2D_
@@ -26,8 +26,8 @@ classdef LockingStrength < handle
         FastPxx_t_
         p_
         q_
-        p_MI_
-        q_MI_
+        p_KLD_
+        q_KLD_
         minPeakDelayNorm_
         minPeakDelay_
     end % properties
@@ -35,11 +35,12 @@ classdef LockingStrength < handle
     properties (Dependent = true, SetAccess = private)        
         flsPC
         flsAmp
+        phDiffChiSq
         phDiff
         phDiffMean
         phDiffStd
         rho
-        MI
+        KLD
         d4D
         d3D
         d2D
@@ -57,10 +58,10 @@ classdef LockingStrength < handle
         FastPxx_t
         p
         q
-        p_MI
-        q_MI
+        p_KLD
+        q_KLD
         minPeakDelayNorm
-        minPeakDelay
+        minPeakDelay        
     end
 
    %%%%%%%%%%%%%%%%%%
@@ -76,6 +77,21 @@ classdef LockingStrength < handle
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        %Properties getters and setter
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       function rho = get.rho(obj)
+           if obj.conf.store_ls==1
+               rho=obj.rho_;
+           else
+               q=obj.q; p=obj.p;
+               if q>p
+                   rho=q/p;
+               else
+                   rho=p/q;
+               end
+           end
+       end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        function flsPC = get.flsPC(obj)
@@ -106,56 +122,80 @@ classdef LockingStrength < handle
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        function phDiff = get.phDiff(obj)
-           if obj.conf.store_ls==1
-               phDiff=obj.phDiff_;
-           else
-               %phDiff = obj.q*obj.Lph-obj.p*obj.Rph;
-               phDiff= obj.q*obj.Lph-obj.p*obj.Rph;
-           end
+           %if obj.conf.store_ls==1
+           %    phDiff=obj.phDiff_;
+           %else
+               %phDiff = obj.q*obj.Lph-obj.p*obj.Rph;     
+               %phDiff= filterdata((obj.p_KLD*unwrap(obj.Lph)-obj.q_KLD*unwrap(obj.Rph))/((obj.p_KLD+obj.q_KLD)/2),0.1);
+               phDiff= (obj.p_KLD*unwrap(obj.Lph)-obj.q_KLD*unwrap(obj.Rph))/((obj.p_KLD+obj.q_KLD)/2);
+           %end
+       end
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       function phDiffChiSq = get.phDiffChiSq(obj)    
+            x=obj.phDiff;
+            n = length(x);
+            edges = linspace(min(x),max(x),20);
+            expectedCounts = n * diff(edges);            
+            phDiffChiSq = chi2gof(x,'edges',edges,'expected',expectedCounts);  
        end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        function phDiffMean = get.phDiffMean(obj)
-           if obj.conf.store_ls==1
-               phDiffMean=obj.phDiffMean_;
-           else
-               %[phDiffMean,~]=circstat(obj.p_MI*obj.Lph-obj.q_MI*obj.Rph);
+           %if obj.conf.store_ls==1
+           %    phDiffMean=obj.phDiffMean_;
+           %else
+               %[phDiffMean,~]=circstat(obj.p_KLD*obj.Lph-obj.q_KLD*obj.Rph);
                [phDiffMean,~]=circstat(obj.phDiff);
-           end
+           %end
        end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        function phDiffStd = get.phDiffStd(obj)
-           if obj.conf.store_ls==1
-               phDiffStd=obj.phDiffStd_;
-           else
-               %[~, phDiffStd]=circstat(obj.p_MI*obj.Lph-obj.q_MI*obj.Rph);
+           %if obj.conf.store_ls==1
+           %    phDiffStd=obj.phDiffStd_;
+           %else
+               %[~, phDiffStd]=circstat(obj.p_KLD*obj.Lph-obj.q_KLD*obj.Rph);
                [~, phDiffStd]=circstat(obj.phDiff);
-           end
+           %end
        end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       function rho = get.rho(obj)
-           if obj.conf.store_ls==1
-               rho=obj.rho_;
-           else
-               q=obj.q; p=obj.p;
-               if q>p
-                   rho=q/p;
-               else
-                   rho=p/q;
-               end
-           end
+       function p_KLD = get.p_KLD(obj)
+           %if obj.conf.store_ls==1
+           %    p_KLD=obj.p_KLD_;
+           %else
+               %best_pq = find_best_pq(obj);
+               %p_KLD=best_pq(2);
+               pfit=fit([1:length(obj.Rph)]'/1000,unwrap(obj.Rph),'poly1');
+               p_KLD=-pfit.p1;
+           %end
        end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       function MI = get.MI(obj)
-           if obj.conf.store_ls==1
-               MI=obj.MI_;
-           else
+       function q_KLD = get.q_KLD(obj)
+           %if obj.conf.store_ls==1
+           %    q_KLD=obj.q_KLD_;
+           %else
+               %best_pq = find_best_pq(obj);
+               %q_KLD=best_pq(3);
+               pfit=fit([1:length(obj.Lph)]'/1000,unwrap(obj.Lph),'poly1');
+               q_KLD=-pfit.p1; 
+           %end
+       end
+
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       function KLD = get.KLD(obj)
+           %if obj.conf.store_ls==1
+           %    KLD=obj.KLD_;
+           %else
                %Get Kulback-Leiber distance between phase difference and uniform distribution
-               [MI,~]=Kulback_Leibler_distance(obj.Lph*obj.q-obj.Rph*obj.p,obj.conf.KLD_bins);
-           end
+               %[KLD,~]=Kulback_Leibler_distance(filterdata(obj.phDiff,0.1),obj.conf.KLD_bins);
+               ph=rem(obj.phDiff+pi,2*pi);
+               ph(ph<0)=2*pi-ph(ph<0);
+               [KLD,~]=Kulback_Leibler_distance(ph-pi,8);
+           %end
        end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,16 +203,7 @@ classdef LockingStrength < handle
            if obj.conf.store_ls==1
                d4D=obj.d4D_;
            else
-               Rx=obj.ts.Rxnorm;
-               Lx=obj.ts.Lxnorm;
-               Lv=obj.ts.Lvnorm;
-               Rv=obj.ts.Rvnorm;
-               z=zeros(size(Lx));
-               l=[Lx,Lv,z,z];
-               r=[z,z,Rx,Rv];
-               %d4D=sqrt( (l(:,1)-r(:,1)).^2 + (l(:,2)-r(:,2)).^2 + (l(:,3)-r(:,3)).^2 + (l(:,4)-r(:,4)).^2);
-               d4D=sqrt((l(:,1)-r(:,3)).^2 + (l(:,2)-r(:,4)).^2);
-               %d4D=d4D-mean(d4D);
+               d4D=sqrt((obj.ts.Lxnorm-obj.ts.Rxnorm).^2 + (obj.ts.Lvnorm-obj.ts.Rvnorm).^2);
            end
        end
        
@@ -298,57 +329,7 @@ classdef LockingStrength < handle
                [~,q]=obj.get_p_q();
            end
        end
-       
-       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       function [p,q]=get_p_q(obj)
-           Lf=obj.Lf;
-           Rf=obj.Rf;
-           if abs(1-Lf/Rf)<0.05
-               q=1;p=1;
-           elseif Lf>Rf
-               if abs(1.5-Lf/Rf)<0.075
-                   p=3; q=2;
-               elseif abs(2-Lf/Rf)<0.1
-                   p=2; q=1;
-               elseif abs(2.5-Lf/Rf)<0.125
-                   p=5; q=2;
-               elseif abs(3-Lf/Rf)<0.15
-                   p=3; q=1;
-               elseif abs(3.5-Lf/Rf)<0.175
-                   p=7; q=2;
-               elseif abs(4-Lf/Rf)<0.2
-                   p=7; q=2;
-               elseif abs(4.5-Lf/Rf)<0.225
-                   p=9; q=2;
-               elseif abs(5-Lf/Rf)<0.25
-                   p=5; q=1;
-               else
-                   [p,q]=rat(Lf/Rf);
-               end
-           else
-               if abs(1.5-Rf/Lf)<0.075
-                   q=3; p=2;
-               elseif abs(2-Rf/Lf)<0.1
-                   q=2; p=1;
-               elseif abs(2.5-Rf/Lf)<0.125
-                   q=5; p=2;
-               elseif abs(3-Rf/Lf)<0.15
-                   q=3; p=1;
-               elseif abs(3.5-Rf/Lf)<0.175
-                   q=7; p=2;
-               elseif abs(4-Rf/Lf)<0.2
-                   q=7; p=2;
-               elseif abs(4.5-Rf/Lf)<0.225
-                   q=9; p=2;
-               elseif abs(5-Rf/Lf)<0.25
-                   q=5; p=1;
-               else
-                   [q,p]=rat(Rf/Lf);
-               end
-               
-           end
-       end
-       
+   
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        function SlowPxx = get.SlowPxx(obj)
            if obj.conf.store_ls==1
@@ -394,80 +375,14 @@ classdef LockingStrength < handle
            end
        end
        
-       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       function p_MI = get.p_MI(obj)
-           if obj.conf.store_ls==1
-               p_MI=obj.p_MI_;
-           else
-               best_pq = find_best_pq(obj);
-               p_MI=best_pq(2);
-           end
-       end
-       
-       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       function q_MI = get.q_MI(obj)
-           if obj.conf.store_ls==1
-               q_MI=obj.q_MI_;
-           else
-               best_pq = find_best_pq(obj);
-               q_MI=best_pq(3);
-           end
-       end
+
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        function minPeakDelay = get.minPeakDelay(obj)
            if obj.conf.store_ls==1
                minPeakDelay=obj.minPeakDelay_;
            else
-               Rpeaks=obj.ts.Rpeaks;
-               Lpeaks=obj.ts.Lpeaks;
-               Rlen = length(Rpeaks)-1;  %Extreme are always zeros!
-               Llen = length(Lpeaks)-1;
-               if Llen<Rlen
-                   q=round(Rlen/Llen);
-                   minPeakDelay=zeros(Llen,1);
-                   for i=1:Llen
-                       L=Lpeaks(i);
-                       if q==1
-                           if i==1
-                               R=Rpeaks(1:i+1);
-                           else
-                               R=Rpeaks(i-1:i+1);
-                           end
-                       elseif (i*(q-1))<1
-                           R=Rpeaks(1:i*(q+1));
-                       elseif (i*(q+1))>Rlen
-                           R=Rpeaks(i*(q-1):Rlen);
-                       else
-                           R=Rpeaks(i*(q-1):i*(q+1));
-                       end
-                       abs(L-R);
-                       [d,j]=min(abs(L-R));
-                       minPeakDelay(i)=d*sign(L-R(j))/1000;
-                   end
-               else
-                   q=round(Llen/Rlen);
-                   minPeakDelay=zeros(Rlen,1);
-                   for i=1:Rlen
-                       R=Rpeaks(i);
-                       if q==1
-                           if i==1
-                               L=Lpeaks(1:i+1);
-                           else
-                               L=Lpeaks(i-1:i+1);
-                           end
-                       elseif (i*(q-1))<1
-                           L=Lpeaks(1:i*(q+1));
-                       elseif (i*(q+1))>Llen
-                           L=Lpeaks(i*(q-1):Llen);
-                       else
-                           L=Lpeaks(i*(q-1):i*(q+1));
-                       end
-                       [d,j]=min(abs(R-L));
-                       minPeakDelay(i)=d*sign(L(j)-R);
-                   end
-               end
-               minPeakDelay=minPeakDelay/1000;
+               minPeakDelay=mpd(obj,0);
            end
        end
        
@@ -476,17 +391,10 @@ classdef LockingStrength < handle
            if obj.conf.store_ls==1
                minPeakDelayNorm=obj.minPeakDelayNorm_;
            else
-               Rpeaks=obj.ts.Rpeaks;
-               Lpeaks=obj.ts.Lpeaks;
-               if length(Lpeaks)<length(Rpeaks)
-                   MT=diff(Rpeaks)/1000;
-               else
-                   MT=diff(Lpeaks)/1000;
-               end
-               minPeakDelayNorm=obj.minPeakDelay/nanmedian(MT/2);
+               minPeakDelayNorm=mpd(obj,1);
            end
        end
-      
+    
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %Constructor
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -514,7 +422,7 @@ classdef LockingStrength < handle
    methods(Static=true)
        Pxx_t = get_scaled_PSD(Pxx,f,rho)
        function anova_var = get_anova_variables()
-           anova_var = { 'MI' 'rho' 'flsPC' 'flsAmp' 'phDiffMean' 'phDiffStd' 'd4D' 'd3D' 'd2D' 'd1D' 'minPeakDelay' 'minPeakDelayNorm'};
+           anova_var = { 'KLD' 'rho' 'flsPC' 'flsAmp' 'phDiffMean' 'phDiffStd' 'phDiffChiSq' 'd4D' 'd3D' 'd2D' 'd1D' 'minPeakDelay' 'minPeakDelayNorm'};
        end
    end
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

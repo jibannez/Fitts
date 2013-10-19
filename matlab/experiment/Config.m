@@ -4,12 +4,13 @@ classdef Config < handle
     properties
         %Global properties
         root_path 
+        rout_path
         data_path
         save_path
         plot_path
         anal_path
         scripts_path = '/home/jorge/Dropbox/dev/Bimanual-Fitts'
-        branch_path  = '22072013' % Unique name to identify this specific config
+        branch_path  = '20130904' % Unique name to identify this specific config
         name=''         %Participant directory name
         number=1        %Session number
         blockpath=''    %Block path
@@ -115,18 +116,24 @@ classdef Config < handle
             else
                 obj.root_path = root_path;
             end
-            obj.data_path = joinpath(obj.root_path,'data');
-            obj.save_path = joinpath(obj.root_path,'save');
-            obj.plot_path = joinpath(obj.root_path,'plot');
-            obj.anal_path = joinpath(obj.root_path,'anal');
+            
+            
+            obj.data_path = joinpath(obj.root_path,'rawdata');
+            
             if ~isempty(obj.branch_path)
-                obj.save_path = joinpath(obj.save_path,obj.branch_path);
-                obj.plot_path = joinpath(obj.plot_path,obj.branch_path);
-                obj.anal_path = joinpath(obj.anal_path,obj.branch_path);
+                obj.rout_path = joinpath(joinpath(obj.root_path,'out'),obj.branch_path);
+                obj.save_path = joinpath(obj.rout_path,'data');
+                obj.plot_path = joinpath(obj.rout_path,'plot');
+            else
+                obj.rout_path = joinpath(obj.root_path,'out');
+                obj.save_path = joinpath(obj.rout_path,'data');
+                obj.plot_path = joinpath(obj.rout_path,'plot');
+                %obj.anal_path = joinpath(obj.rout_path,'anal');
             end
+
             if ~exist(obj.save_path,'dir'), mkdir(obj.save_path); end     
             if ~exist(obj.plot_path,'dir'), mkdir(obj.plot_path); end
-            if ~exist(obj.anal_path,'dir'), mkdir(obj.anal_path); end
+            %if ~exist(obj.anal_path,'dir'), mkdir(obj.anal_path); end
             obj.participants = size(dir2(obj.data_path),1);
             if obj.participants==0
                fprintf('No participant data found in %s\n',obj.data_path)

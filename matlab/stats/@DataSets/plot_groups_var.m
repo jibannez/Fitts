@@ -39,7 +39,7 @@ function plot_(ds,gpc,figname)
     end
     if ds.do_legend, legend(legend_groups,gpc.legends,'Location','Best'); end
     hold off
-    savefig(ds,figname)
+    savefig(gpc,figname)
 end
 
 
@@ -99,18 +99,17 @@ function create_subplots(ds,vno,v,rootname)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function savefig(ds, figname)
+function savefig(gpc, figname)
     if strfind('phi_{',figname)
         figname='phasediffstd';
     end
-    figname = joinpath(ds.savepath,figname);
-    if ~isempty(ds.savepath) && exist(ds.savepath,'dir')
-        if strcmp(ds.ext,'fig')
+    figname = joinpath(gpc.savepath,figname);
+    if ~isempty(gpc.savepath) && exist(gpc.savepath,'dir')
+        if strcmp(gpc.ext,'fig')
             hgsave(gcf,figname,'all');
         else
-            set(gcf, 'PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi);
-            print(gcf,['-d',ds.ext],sprintf('-r%d',ds.dpi),figname);     
-        end
-           
+            set(gcf, 'PaperUnits', 'inches', 'PaperPosition', gpc.figsize/gpc.dpi);
+            print(gcf,['-d',gpc.ext],sprintf('-r%d',gpc.dpi),figname);     
+        end           
     end
 end

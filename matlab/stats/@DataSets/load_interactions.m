@@ -1,6 +1,6 @@
 function load_interactions(ds)
     % open the file
-    fid = fopen(joinpath(ds.Rpath,'anova.out'));
+    fid = fopen(joinpath(ds.savepathR,'anova.out'));
     ds.flists={};
     
     % read the file

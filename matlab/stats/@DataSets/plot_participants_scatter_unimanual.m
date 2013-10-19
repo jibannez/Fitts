@@ -1,14 +1,15 @@
-function plot_participants_scatter_unimanual(data,varname,vartype)    
+function plot_participants_scatter_unimanual(ds,data,varname,vartype,savepath)    
     %Define or get some globals
-    global plot_type;
-
     [hnds, ids, cnt, reps]=size(data);
     colors=get_colors();
     marker='o';
     hands={'Left','Right'};
+    figname=['uni',varname];
+    fprintf('Plotting unimanual variable %s\n',varname);
     
     %Select the type of plot
-    set_figtype(plot_type,varname,vartype);
+    %set_figtype(ds.plot_type,varname,vartype);
+    create_figure(ds,savepath,figname)
     
     %Get limits for plot scaling, common to all plots
     [mindata, maxdata]=get_limits(data);
@@ -16,7 +17,7 @@ function plot_participants_scatter_unimanual(data,varname,vartype)
     %Iterate over both hands, one plot per hand
     for h=1:hnds
         %Create subplots depending on configuration
-        create_subplots(h,plot_type,varname,vartype);
+        create_subplots(h,ds.plot_type,varname,vartype);
         hold on       
         %Set Y limits in advance        
         set_limits(mindata,maxdata);        
@@ -37,6 +38,7 @@ function plot_participants_scatter_unimanual(data,varname,vartype)
         do_cosmetics(ids,h,[hands{h},' ',varname])
         hold off
     end
+    savefig(ds,savepath, figname)
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -81,7 +83,7 @@ function plot_ids(ids,h,maxdata)
     if isempty(maxdata)
         return;
     end
-    labels={'Difficult','Medium','Easy'};
+    labels={'Easy','Medium','Difficult'};
     
     for id=1:ids
         if h==1 && id==2; continue; end
@@ -118,7 +120,7 @@ end
 function create_subplots(hand,plot_type, varname,vartype)
     scrsz = get(0,'ScreenSize');
     %Create subplots depending on configuration
-    if ~isempty(strfind(vartype,'ls')) || ~isempty(strfind(varname,'minPeakDistance'))
+    if any(strfind(vartype,'ls'))% || ~isempty(strfind(varname,'minPeakDistance'))
         if ~isempty(strfind(plot_type,'tight'))
             subplottight(1,1,hand);
         elseif ~isempty(strfind(plot_type,'subplot'))
@@ -128,7 +130,7 @@ function create_subplots(hand,plot_type, varname,vartype)
             set(gcf,'name',varname);
         end
     else
-        if ~isempty(strfind(plot_type,'tight'))
+        if any(strfind(plot_type,'tight'))
             subplottight(2,1,hand);
         elseif ~isempty(strfind(plot_type,'subplot'))
             subplot(2,1,hand);
@@ -143,13 +145,22 @@ function create_subplots(hand,plot_type, varname,vartype)
         end
     end
 end
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function set_figtype(plot_type,rootname,vartype)
+%     scrsz = get(0,'ScreenSize');
+%     if ~isempty(strfind(plot_type,'subplot')) || ~isempty(strfind(plot_type,'tight')) && ...
+%         ~isempty(strfind(vartype,'ls'))
+%         figure('Position',[1 scrsz(4)/2 scrsz(3)/1 scrsz(4)/3])
+%         set(gcf,'name',rootname);
+%     end
+% end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function set_figtype(plot_type,rootname,vartype)
-    scrsz = get(0,'ScreenSize');
-    if ~isempty(strfind(plot_type,'subplot')) || ~isempty(strfind(plot_type,'tight')) && ...
-        ~isempty(strfind(vartype,'ls'))
-        figure('Position',[1 scrsz(4)/2 scrsz(3)/1 scrsz(4)/3])
-        set(gcf,'name',rootname);
+function create_figure(ds,savepath,rootname)
+    if ~isempty(savepath)
+        figure('name',rootname,'numbertitle','off','PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi,'Visible','off');
+    else
+        figure('name',rootname,'numbertitle','off','PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi);
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,6 +193,18 @@ function [xticksp,xticksl]=get_xticks(ids,h)
     for id=1:ids        
         xticksp=[xticksp,xpos0+get_x(id,h)];
         xticksl=[xticksl,xlabels];
+    end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function savefig(ds,savepath, figname)
+    if ~isempty(savepath) && exist(savepath,'dir')        
+        figname = joinpath(savepath,figname);        
+        if strcmp(ds.ext,'fig')
+            hgsave(gcf,figname,'all');
+        else
+            set(gcf, 'PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi);
+            print(gcf,['-d',ds.ext],sprintf('-r%d',ds.dpi),figname);     
+        end           
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -42,6 +42,10 @@ function pguess=fit_trial1D(mdl,tr,do_plot)
     pguess{1}=sqrt(pguess{1}^2+wfexp^2-mean(mdl.phdot)^2);
     %pguess{1}=sqrt(wfexp^2+9*pguess{end}^2);
     
-    if do_plot, mdl.plot_trfit1D(tr,'',pguess); end 
-    mdl.load_param(pguess)
+    if do_plot 
+        mdl.plot_trfit1D(tr,'',pguess);
+    else
+        mdl.load_param(pguess);
+        mdl.run;
+    end 
 end

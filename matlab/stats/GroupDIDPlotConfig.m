@@ -1,6 +1,7 @@
 classdef GroupDIDPlotConfig < handle
     properties
         data
+        data_scatter
         vname
         names
         hnames
@@ -16,24 +17,52 @@ classdef GroupDIDPlotConfig < handle
         ymax
         yrange
         ylim
+        yticks
+        yticklabels
         xmin
         xmax
-        ss       
+        ss    
         
+        %Line plots specific
+        xticks
+        %yticks
+        xticklabels
+        yminorticks
+        %yticklabels
+        %colors
+        f2
+        f2name        
+        linespec
+        linewidth
+        labels
+        f1
+        f1name
+    
+        %Global plot configurations 
+        ext
+        dpi
+        col2inches
+        aureumprop
+        do_legend
+        do_anotations
+        do_title
+        do_ylabel
+        do_grids
+        do_latex
+        do_ticks
+        do_yticklabels
+        plot_type       
+        figsize
+        fontname
+        fontnamelatex
+        fontsize  
         
         %Define or fetch some globals PLOT_GROUPS_did
-        ext='png'
-        dpi=300
+        savepath
         verbose=1
         fid=1
         order=1
-        do_legend=0
-        do_anotations=0
-        do_title=0
-        do_ylabel=1
-        plot_type='subplot'; %'tight' 'figure' 'subplot'       
-        figsize=[0,0,2400,1800];
-  
+        mode=3 %1=bar plots; 2=scatter plots; 3=line plots
     end
 
     properties (Dependent = true, SetAccess = private)
@@ -44,112 +73,123 @@ classdef GroupDIDPlotConfig < handle
         
         %Constructor
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function ds = GroupDIDPlotConfig(bi,factors)
-            ds.factors=factors;
-            ds.get_properties(bi);
-            ds.fetch_data(bi);
-            
-            ds.ymin = nanmin(filterOutliers(bi(:)));
-            ds.ymax = nanmax(filterOutliers(bi(:)));
-            ds.yrange=ds.ymax-ds.ymin;
-            ds.ylim=[ds.ymin-ds.yrange/10,ds.ymax+ds.yrange/10];
-            if ds.ylim(1)<0 & ds.ymin>=0
-                ds.ylim(1)=0;
-            end
-            ds.xmin = 0;
-            ds.xmax = (3*ds.franges(2)+1)*ds.franges(1)-1;
-            ds.get_xlabels_pos();
-            
-            % Factor 2, determines legend names and coloring scheme
-            if strcmp(ds.factors{end},'grp')
-                ds.names ={'Coupled','Uncoupled'};
-                ds.colors={[[0.6,0.2,0.2] ; [0.8,0.2,0.2];[1,0.2,0.2]],...
-                           [[0.2,0.2,1]   ; [0.2,0.2,0.8];[0.2,0.2,0.6]]};
-            elseif strcmp(ds.factors{end},'did')
-                ds.names ={'ID_{diff} Zero','ID_{diff} Small','ID_{diff} Large'};
-                ds.colors={[[0.6,0.2,0.2] ; [0.8,0.2,0.2];[1,0.2,0.2]],...
-                           [[0.2,0.2,1]   ; [0.2,0.2,0.8];[0.2,0.2,0.6]],...
-                           [[0.2,0.6,0.2] ; [0.2,0.8,0.2];[0.2,1,0.2]]};
-            end
-            
-            % Factor 1 labels
-            if strcmp(ds.factors{1},'grp')
-                ds.xlabels={'Coupled','Uncoupled'};
-            elseif strcmp(ds.factors{1},'did')
-                ds.xlabels={'Zero','Small','Large'};
+        function gpc = GroupDIDPlotConfig(bi,factors,savepath,vname,mode)
+            if nargin<5, mode=3;end
+            gpc.factors=factors;
+            gpc.vname=vname;
+            gpc.mode=mode;
+            gpc.savepath=savepath;
+            gpc.get_properties(bi);
+            gpc.fetch_data(bi);
+            gpc.fetch_data2(bi);
+            plotdefaults(gpc);
+            get_barplotdid_props(gpc,bi);
+            if gpc.mode==3
+                get_lineplot_props(gpc,{'ss','did'},'3levels')
+                %get_lineplot_props(gpc,{'did','ss'},'3levels')
             end
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function get_properties(ds,bi)
+        function get_properties(gpc,bi)
             %Diferenciate bimanual/unimanual variables
             if length(size(bi))==4
-                [grp, ds.ss, did, reps]=size(bi);
-                ds.two_hands=0;
+                [grp, gpc.ss, did, reps]=size(bi);
+                gpc.two_hands=0;
             else
-                [hno, grp, ds.ss, did, reps]=size(bi);
-                ds.two_hands=1;
-                ds.hnames={'Left Hand','Right Hand'};
+                [hno, grp, gpc.ss, did, reps]=size(bi);
+                gpc.two_hands=1;
+                gpc.hnames={'Left Hand','Right Hand'};
             end
             
             %Compute ranges of factors
-            ds.franges=zeros(1,length(ds.factors));
-            for i=1:length(ds.factors)
-                if strcmp(ds.factors{i},'grp')
-                    ds.franges(i)=grp;
-                elseif strcmp(ds.factors{i},'did')
-                    ds.franges(i)=did;
+            gpc.franges=zeros(1,length(gpc.factors));
+            for i=1:length(gpc.factors)
+                if strcmp(gpc.factors{i},'grp')
+                    gpc.franges(i)=grp;
+                elseif strcmp(gpc.factors{i},'did')
+                    gpc.franges(i)=did;
                 end
             end
             
             %Allocate data matrices depending on handedness
-            if ds.two_hands
-                ds.data = zeros(hno,ds.franges(1),ds.franges(2),ds.ss,2);                
+            if gpc.two_hands
+                gpc.data = zeros(hno,gpc.franges(1),gpc.franges(2),gpc.ss,2);                
             else
-                ds.data = zeros(ds.franges(1),ds.franges(2),ds.ss,2);
+                gpc.data = zeros(gpc.franges(1),gpc.franges(2),gpc.ss,2);
             end
         end
         
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function fetch_data(ds,bi)            
-            for f1=1:ds.franges(1)
-                for f2=1:ds.franges(2)
-                    [g,did]=ds.get_indexes([f1,f2]);
+        function fetch_data(gpc,bi)            
+            for f1=1:gpc.franges(1)
+                for f2=1:gpc.franges(2)
+                    [g,did]=gpc.get_indexes([f1,f2]);
                     for s=1:3
-                        ds.data(f1,f2,s,1)=nanmedian(squeeze(bi(g,s,did,:)));
-                        ds.data(f1,f2,s,2)=nanste(squeeze(bi(g,s,did,:)));
+                        if gpc.two_hands
+                            for h=1:2
+                                gpc.data(h,f1,f2,s,1)=nanmean(squeeze(bi(h,g,s,did,:)));
+                                gpc.data(h,f1,f2,s,2)=nanste(squeeze(bi(h,g,s,did,:)));
+                            end
+                        else
+                            gpc.data(f1,f2,s,1)=nanmean(squeeze(bi(g,s,did,:)));
+                            gpc.data(f1,f2,s,2)=nanste(squeeze(bi(g,s,did,:)));
+                        end
                     end
                 end
             end
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function [g,did] = get_indexes(ds,fvals)
-            for i=1:length(ds.factors)
-                if strcmp(ds.factors{i},'grp')
+        function fetch_data2(gpc,bi)            
+            for f1=1:gpc.franges(1)
+                for f2=1:gpc.franges(2)
+                    [g,did]=gpc.get_indexes([f1,f2]);
+                    for s=1:3
+                        if gpc.two_hands
+                            for h=1:2
+                                for rep=1:length(bi(h,g,s,did,:))
+                                    gpc.data_scatter(h,f1,f2,s,rep)=bi(h,g,s,did,rep);
+                                end
+                            end
+                        else
+                            for rep=1:length(bi(g,s,did,:))
+                                gpc.data_scatter(f1,f2,s,rep)=bi(g,s,did,rep);
+                            end
+                        end
+                    end
+                end
+            end
+        end        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        function [g,did] = get_indexes(gpc,fvals)
+            for i=1:length(gpc.factors)
+                if strcmp(gpc.factors{i},'grp')
                     g=fvals(i);
-                elseif strcmp(ds.factors{i},'did')
+                elseif strcmp(gpc.factors{i},'did')
                     did=fvals(i);
                 end
             end
         end   
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function gap = get_gap(ds,f1,f2)
+        function gap = get_gap(gpc,f1,f2)
             %   f3-blk-pos  + f2-blk-size  *  f2-blk-no
-            gap=(ds.ss+0.5)*(f2-1)+((ds.ss+0.5)*ds.franges(2)+2)*(f1-1);
+            %gap=(gpc.ss+0.5)*(f2-1)+((gpc.ss+0.5)*gpc.franges(2)+2)*(f1-1);
+            gap=(gpc.ss+0.5)*(f2-1);%+((gpc.ss+0.5)*gpc.franges(2)-1)*(f1-1);
         end
         
-        function get_xlabels_pos(ds)
-           ds.xlabels_pos = zeros(ds.franges(1),2);
-           for i=1:ds.franges(1)
-               if ds.franges(2)==2
-                   ds.xlabels_pos(i,1)=ds.get_gap(i,1)+3;
+        function get_xlabels_pos(gpc)
+           gpc.xlabels_pos = zeros(gpc.franges(1),2);
+           for i=1:gpc.franges(1)
+               if gpc.franges(2)==2
+                   gpc.xlabels_pos(i,1)=gpc.get_gap(i,1)+3;
                else
-                   ds.xlabels_pos(i,1)=ds.get_gap(i,2)+2;
+                   gpc.xlabels_pos(i,1)=gpc.get_gap(i,2)+2;
                end
-               ds.xlabels_pos(i,2)=ds.ymax+ds.ymax/15;
+               gpc.xlabels_pos(i,2)=gpc.ymax+gpc.ymax/15;
            end               
         end
     end

@@ -21,6 +21,7 @@ classdef GroupPlotConfig < handle
         ss
         
         %Define or fetch some globals PLOT_GROUPS_did
+        savepath
         ext='png'
         dpi=300
         verbose=1
@@ -32,7 +33,9 @@ classdef GroupPlotConfig < handle
         do_title=0
         do_ylabel=1
         plot_type='subplot'; %'tight' 'figure' 'subplot'       
-        figsize=[0,0,2400,1800];
+        figsize=[0,0,1600,1000];
+        fontname='Arial'
+        fontsize=10
 
 
         %Define or fetch some globals PLOT_GROUPS
@@ -40,11 +43,11 @@ classdef GroupPlotConfig < handle
         vnames={'MT','accTime','decTime','accQ','IPerfEf',...
               'maxangle','d3D','d4D','Circularity',...
               'vfCircularity','vfTrajCircularity','Harmonicity',...
-              'rho','flsPC','phDiffStd','MI','minPeakDelay','minPeakDelayNorm'};      
+              'rho','flsPC','phDiffStd','phDiffChiSq','KLD','minPeakDelay','minPeakDelayNorm'};      
         vstrs={'MT','AT','DT','AQ','IPE',...
               'MA','d3D','d4D','Circularity',...
               'VFC','VFT','H',...
-              '\rho','FLS','\phi_{\sigma}','MI','dpeaks','dpeaks_{norm}'};
+              '\rho','FLS','\phi_{\sigma}','phDiffChiSq','KLD','MPD','MPD_{norm}'};
         units={' (s)',' (s)',' (s)','',' (bits/s)',...
               '(rad)','','','',...
               '','','',...
@@ -52,7 +55,7 @@ classdef GroupPlotConfig < handle
         titles={'Movement Time','Acceleration Time','Deceleration Time','Acceleration Ratio','Effective Index of Performace',...
                 'Maximal Angle','3D Distance','4D Distance','Circularity',...
                 'Vector Field Circularity','Vector Field Trajectory Circularity','Harmonicity',...
-                '\rho','flsPC','\phi_{\sigma}','Mutual Information','Minimal Peak Delay','Minimal Peak Delay Normalized'};
+                '\rho','flsPC','\phi_SD','\phi_SD \chi test','Mutual Information','Minimal Peak Delay','Minimal Peak Delay Normalized'};
 
     end
     
@@ -70,9 +73,10 @@ classdef GroupPlotConfig < handle
         end
         %Constructor
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function gpc = GroupPlotConfig(vname,bi,un,factors)
-            if nargin==3
+        function gpc = GroupPlotConfig(vname,bi,un,factors,savepath)
+            if nargin==4
                 gpc.factors=un;
+                gpc.savepath=factors;
                 gpc.get_properties(bi);
                 gpc.fetch_data(bi);
                 gpc.ymin = nanmin(filterOutliers(bi(:)));
@@ -82,8 +86,9 @@ classdef GroupPlotConfig < handle
                 if gpc.ylim(1)<0 & gpc.ymin>=0
                     gpc.ylim(1)=0;
                 end
-            elseif nargin==4
+            elseif nargin==5
                 gpc.factors=factors;
+                gpc.savepath=savepath;
                 gpc.get_properties(bi);
                 gpc.fetch_relative_data(bi,un);
                 if strfind(vname,'{rel}')
@@ -107,8 +112,10 @@ classdef GroupPlotConfig < handle
                         gpc.ylim(1)=0;
                     end
                 end
-           
+            elseif nargin==0
+                return
             end            
+            
             gpc.vname= vname;            
             gpc.xmin = 0;
             gpc.xmax = (3*gpc.franges(3)+1)*gpc.franges(2)+2;
@@ -221,13 +228,13 @@ classdef GroupPlotConfig < handle
                         if ds.two_hands
                             for h=1:2                 
                                 for s=1:ds.ss
-                                    ds.data(h,f1,f2,f3,s,1)=nanmedian(squeeze(bi(h,g,s,l,r,:)));
+                                    ds.data(h,f1,f2,f3,s,1)=nanmean(squeeze(bi(h,g,s,l,r,:)));
                                     ds.data(h,f1,f2,f3,s,2)=nanste(squeeze(bi(h,g,s,l,r,:)));
                                 end
                             end
                         else
                             for s=1:3
-                                ds.data(f1,f2,f3,s,1)=nanmedian(squeeze(bi(g,s,l,r,:)));
+                                ds.data(f1,f2,f3,s,1)=nanmean(squeeze(bi(g,s,l,r,:)));
                                 ds.data(f1,f2,f3,s,2)=nanste(squeeze(bi(g,s,l,r,:)));
                             end
                         end

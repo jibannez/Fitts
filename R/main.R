@@ -1,21 +1,22 @@
 #Analysis of Variance for Bimanual Fitts experiment
 require(doMC)
-rootpath='/home/jorge/Dropbox/dev/Bimanual-Fitts/R'
-source(paste(rootpath,'aux_fcns.R',sep='/'))
-source(paste(rootpath,'plot_fcns_bi.R',sep='/'))
-source(paste(rootpath,'stat_fcns_bi.R',sep='/'))
-source(paste(rootpath,'plot_fcns_bi_did.R',sep='/'))
-source(paste(rootpath,'stat_fcns_bi_did.R',sep='/'))
-source(paste(rootpath,'plot_fcns_uni.R',sep='/'))
-source(paste(rootpath,'stat_fcns_uni.R',sep='/'))
-source(paste(rootpath,'get_Rname.R',sep='/'))
-source(paste(rootpath,'config_analysis.R',sep='/'))
+scriptspath='/home/jorge/Dropbox/dev/Bimanual-Fitts/R'
+saveroot='/home/jorge/KINARM/out'
+source(paste(scriptspath,'aux_fcns.R',sep='/'))
+source(paste(scriptspath,'plot_fcns_bi.R',sep='/'))
+source(paste(scriptspath,'stat_fcns_bi.R',sep='/'))
+source(paste(scriptspath,'plot_fcns_bi_did.R',sep='/'))
+source(paste(scriptspath,'stat_fcns_bi_did.R',sep='/'))
+source(paste(scriptspath,'plot_fcns_uni.R',sep='/'))
+source(paste(scriptspath,'stat_fcns_uni.R',sep='/'))
+source(paste(scriptspath,'get_Rname.R',sep='/'))
+source(paste(scriptspath,'config_analysis.R',sep='/'))
 registerDoMC()
 
 #Prepare global paths
-opath=paste(paste(rootpath,"stats",sep='/'),Rname,sep='/')
+opath=paste(paste(saveroot,Rname,sep='/'),"stats",sep='/')
 dir.create(opath,showWarnings=FALSE)
-Rdatapath=paste(paste(rootpath,'dataframes',sep='/'),Rname,sep='/')
+Rdatapath=paste(paste(saveroot,Rname,sep='/'),'dataframes',sep='/')
 uLfile=paste(Rdatapath,"UniL_fitts.dat",sep='/')
 uRfile=paste(Rdatapath,"UniR_fitts.dat",sep='/')
 bfile=paste(Rdatapath,"Bi_fitts.dat",sep='/')
@@ -66,6 +67,12 @@ colBiDidNo_t<-length(biddata)
 levels(biddata$grp)=c('C','U')
 #levels(biddata$DID)=c('-2','-1','0-','1','2','0+')
 
+if (length(levels(biddata$DID)) == 6) {
+	DID_str <- 'DID6_'
+	} else {
+	DID_str <- 'DID3_'
+	}
+
 #Generate the ranges of variables to be analyzed in tables
 rangeB<-(factBiNo +1):(colBiNo_t)
 rangeBd<-(factUniNo+1):(colBiDidNo)
@@ -95,7 +102,7 @@ if (do_bimanual == TRUE) {
 if (do_bimanualDelta == TRUE) {
 	if (do_parallel==TRUE) {
 		foreach (vname=names(biddata)[rangeBd]) %dopar% {
-			vpath=paste(opath,paste('DID_',vname,sep=""),sep="/")
+			vpath=paste(opath,paste(DID_str,vname,sep=""),sep="/")
 			dir.create(vpath,showWarnings=FALSE)
 			print(paste('analyzing Delta ID bimanual variable',vname))	
 			bimanualDelta_fcns(biddata,vname,vpath)
@@ -103,7 +110,7 @@ if (do_bimanualDelta == TRUE) {
 	}
 	else {
 		for (vname in names(biddata)[rangeBd]) {
-			vpath=paste(opath,paste('DID_',vname,sep=""),sep="/")
+			vpath=paste(opath,paste(DID_str,vname,sep=""),sep="/")
 			dir.create(vpath,showWarnings=FALSE)
 			print(paste('analyzing Delta ID bimanual variable',vname))	
 			bimanualDelta_fcns(biddata,vname,vpath)
@@ -127,7 +134,7 @@ if (do_unimanual == TRUE) {
 			vpath=paste(opath,vtrans,sep="/")
 			dir.create(vpath,showWarnings=FALSE)
 			print(paste('analyzing Right unimanual variable',vname))
-			unimanual_fcns(uRdata,vname,vpath)		
+			unimanual_fcns(uRdata,vname,vpath)	
 		}
 	}
 	else {

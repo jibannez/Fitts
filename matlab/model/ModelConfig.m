@@ -255,7 +255,7 @@ classdef ModelConfig < handle
                                                                         %
         IC2D=[0,0]                                                      %
                                                                         %
-        tspan=[0,60*pi]                                                 %
+        tspan=[0,30]                                                    %
                                                                         %
         ode                                                             %
                                                                         %

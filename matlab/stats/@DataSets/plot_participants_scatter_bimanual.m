@@ -1,28 +1,37 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Auxiliar functions for controlling plotting of either uni or bi data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_participants_scatter_bimanual(data,varname,vartype,rel)
-    if nargin<4, rel=0; end
+function plot_participants_scatter_bimanual(ds,data,varname,vartype,savepath,rel)
+    if nargin<6, rel=0; end
+    figsize=ds.figsize;
+    ds.figsize=[0,0,4,2/ds.aureumprop]*ds.dpi*ds.col2inches;
     
-    global plot_type;
+    %Some feedback for user
+    if rel
+        fprintf('Plotting relative variable %s\n',varname);
+    else
+        fprintf('Plotting variable %s\n',varname);
+    end
     
     %Define or get some globals
     if length(size(data))==5
-        [hnds, idl, idr, cnt, reps]=size(data);
+        [hnds, idl, idr, cnt, reps]=size(data);        
         hands={'Left','Right'};
     else
-        [idl, idr, cnt, reps]=size(data);
+        [idl, idr, cnt, reps]=size(data);        
         hnds=1; hands={''};
     end
     colors=get_colors();
-    marker='o';
+    marker='.';
     
     %Select the type of plot
     if rel
-        set_figtype(plot_type,['rel' varname],vartype);
+        figname=['rel', varname];
     else
-        set_figtype(plot_type,varname,vartype);
+        figname=varname;
     end
+    %set_figtype(ds.plot_type,figname,vartype);
+    create_figure(ds,savepath,figname)
     
     %Get limits for plot scaling, common to all plots
     [mindata, maxdata]=get_limits(data);
@@ -30,7 +39,7 @@ function plot_participants_scatter_bimanual(data,varname,vartype,rel)
     %Iterate over both hands, one plot per hand
     for h=1:hnds
         %Create subplots depending on configuration
-        create_subplots(h,plot_type,varname,vartype);
+        create_subplots(h,ds.plot_type,varname,vartype);
         hold on       
         %Set Y limits in advance        
         set_limits(mindata,maxdata);        
@@ -45,7 +54,8 @@ function plot_participants_scatter_bimanual(data,varname,vartype,rel)
                         d=data(h,l,r,i,:);
                     end
                     scatter([1,1,1]*xpos(i),d,'Marker',marker,...
-                    'MarkerEdgeColor',colors{i},'MarkerFaceColor',colors{i});
+                            'MarkerEdgeColor',colors{i},...
+                            'MarkerFaceColor',colors{i});
                 end
             end
         end        
@@ -62,6 +72,8 @@ function plot_participants_scatter_bimanual(data,varname,vartype,rel)
         end
         hold off
     end
+    savefig(ds,savepath, figname)
+    ds.figsize=figsize;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -103,7 +115,7 @@ function plot_idl(idr,idl,maxdata)
     if isempty(maxdata)
         return;
     end
-    labels={'LD','LE'};
+    labels={'LE','LD'};
     for r=1:idr
         for l=1:idl
             text(6+get_x(r,l),maxdata,labels{l});
@@ -115,7 +127,7 @@ function plot_idr(idr,maxdata)
     if isempty(maxdata)
         return;
     end
-    labels={'Right Difficult','Right Medium','Right Easy'};
+    labels={'Right Easy','Right Medium','Right Difficult'};
     %labels={'RD','RM','RE'};
     for r=1:idr
         text(9.5+get_x(r,1),maxdata+maxdata/10,labels{r},'FontWeight','bold');
@@ -188,12 +200,20 @@ function create_subplots(hand,plot_type, varname,vartype)
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function set_figtype(plot_type,rootname,vartype)
-    scrsz = get(0,'ScreenSize');
-    if ~isempty(strfind(plot_type,'subplot')) || ~isempty(strfind(plot_type,'tight')) && ...
-        ~isempty(strfind(vartype,'ls'))
-        figure('Position',[1 scrsz(4)/2 scrsz(3)/1 scrsz(4)/3])
-        set(gcf,'name',rootname);
+% function set_figtype(plot_type,rootname,vartype)
+%     scrsz = get(0,'ScreenSize');
+%     if ~isempty(strfind(plot_type,'subplot')) || ~isempty(strfind(plot_type,'tight')) && ...
+%         ~isempty(strfind(vartype,'ls'))
+%         figure('Position',[1 scrsz(4)/2 scrsz(3)/1 scrsz(4)/3])
+%         set(gcf,'name',rootname);
+%     end
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%       
+function create_figure(ds,savepath,rootname)
+    if ~isempty(savepath)
+        figure('name',rootname,'numbertitle','off','PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi,'Visible','off');
+    else
+        figure('name',rootname,'numbertitle','off','PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi);
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -213,9 +233,10 @@ function do_cosmetics(idr,idl,ylabelstr)
             ylabelstr={ylabelstr(1:l),ylabelstr(l+1:end)};
         end
     end
-    ylabh=ylabel(ylabelstr,'rot',0);
+    %ylabh=ylabel(ylabelstr,'rot',0);
+    ylabh=ylabel('\rho','rot',0);
     set(ylabh,'Position',get(ylabh,'Position') - [3 0 0]);
-    grid on;
+    grid off;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [xticksp,xticksl]=get_xticks(idr,idl)
@@ -229,6 +250,42 @@ function [xticksp,xticksl]=get_xticks(idr,idl)
             xticksp=[xticksp,xpos0+get_x(r,l)];
             xticksl=[xticksl,xlabels];
         end
+    end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function savefig(ds,savepath, figname)
+%     if strfind('phi_{',figname), figname='phasediffstd'; end
+%     if ~isempty(savepath) && exist(savepath,'dir')        
+%         figname = joinpath(savepath,figname);        
+%         if strcmp(ds.ext,'fig')
+%             hgsave(gcf,figname,'all');
+%         else
+%             set(gcf, 'PaperUnits', 'inches', 'PaperPosition', ds.figsize/ds.dpi);
+%             print(gcf,['-d',ds.ext],sprintf('-r%d',ds.dpi),figname);     
+%         end           
+%     end
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function savefig(ds,savepath,figname)    
+    if strfind('\phi_{SD}',figname)
+        figname='phasediffstd';
+    elseif strfind('\rho',figname)
+        figname='rho';
+    elseif strfind('D_{KL}',figname)
+        figname='DKL';        
+    end
+    figname = joinpath(savepath,figname);
+    if ~isempty(savepath) && exist(savepath,'dir')
+        pos=ds.figsize/ds.dpi;
+        set(gcf, 'PaperUnits', 'inches', 'PaperSize',pos(3:4),'PaperPosition', pos);
+        if strcmp(ds.ext,'fig')
+            hgsave(gcf,figname,'all');
+        elseif strcmp(ds.ext,'pdf')
+            mlf2pdf(gcf,figname);
+        else
+            print(gcf,['-d',ds.ext],sprintf('-r%d',ds.dpi),figname);
+        end
+        close gcf
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

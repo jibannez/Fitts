@@ -10,9 +10,12 @@ def get_results_string(filepath):
 
 did=1
 R_PATH="/home/jorge/Dropbox/dev/Bimanual-Fitts/R"
-RES_PATH=os.path.join(R_PATH,"stats")
+R_SAVE_PATH="/home/jorge/KINARM/out"
+
 RES_STR=get_results_string(os.path.join(R_PATH,"get_Rname.R"))
-RES_DIR=os.path.join(RES_PATH,RES_STR)
+RES_PATH=os.path.join(R_SAVE_PATH,RES_STR)
+R_RES_DIR=os.path.join(RES_PATH,"stats")
+R_OUT_DIR=os.path.join(RES_PATH,"dataframes")
 
 
 if did:
@@ -85,12 +88,15 @@ def print_res(xway,msg,res,pvar,pval,sig):
 def get_sig_byfact(res,fact,pval):
     pass
     
-def parse_results(res_path=RES_DIR):
+def parse_results(res_path=R_RES_DIR):
     return { var:parse_var(res_path,var) for var in os.listdir(res_path)}   
         
 def parse_var(res_path,v):
     var_res=dict();
+    vlist=['DID6_MT','DID6_accQ','DID6_peakVel','DID6_IPerfEf','DID6_Harmonicity','DID6_maxangle','DID6_vfCircularity','DID3_rho','DID3_phDiffStd','DID3_flsPC','DID3_KLD','DID3_minPeakDelay','DID3_minPeakDelayNorm','DID3_d4D']
     vpath=os.path.join(res_path,v)
+    if v not in vlist:
+		return dict()
     
     ######################################################
     #Process anova.out file
@@ -195,12 +201,12 @@ def print_var(results,vname,postp='p[HF]'):
 def get_factors(vname):
     if vname.startswith('UniL') or vname.startswith('UniR'):
         return ['S','ID','grp','grp:S','grp:ID','S:ID','grp:S:ID']
-    elif vname.startswith('DID_'):
+    elif vname.startswith('DID3_') or vname.startswith('DID6_'):
         return ['S','DID','grp','grp:S','grp:DID','S:DID','grp:S:DID']
     else:
         return ['grp','S','IDR', 'IDL','grp:S','IDR:IDL','grp:IDR','grp:IDL', 'S:IDR','S:IDL','grp:IDR:IDL','S:IDR:IDL','grp:S:IDR','grp:S:IDL','grp:S:IDR:IDL']
     
-def save_results(results,fname=os.path.join(R_PATH,'anova.out')):
+def save_results(results,fname=os.path.join(R_OUT_DIR,'anova.out')):
     sep=' '
     f=open(fname,'w+')
     for key,value in results.iteritems():
@@ -221,10 +227,34 @@ def save_results(results,fname=os.path.join(R_PATH,'anova.out')):
                     f.write(sep+factor)
         f.write('\n')
     f.close()   
-                
+    
+def write_table(results,fname=os.path.join(R_OUT_DIR,'table.csv')):
+    sep=','
+    f=open(fname,'w+')    
+    vlist=['DID6_MT','DID6_accQ','DID6_peakVel','DID6_Harmonicity','DID6_maxangle','DID6_vfCircularity','DID3_rho','DID3_flsPC','DID3_phDiffStd','DID3_KLD']
+    flist=['grp','S','DID','grp:S','grp:DID','S:DID','grp:S:DID']    
+    keys=results.keys()
+    for vname in vlist:
+		if vname in keys:
+			vres=results[vname]
+			if len(vres)==0:
+				continue
+			else:
+				f.write(vname)
+				for factor in flist:
+					r=vres[factor]
+					Fstat=r[2]
+					pval=r[3]
+					ges=r[4]
+					rstring='%s%2.2f%s%2.2f%s%2.2f' % (sep,Fstat,sep,pval,sep,ges)
+					f.write(rstring)
+				f.write('\n')		 
+    f.close()   
+    
         
 if __name__ == '__main__':    
     res=parse_results()
     #print_results(res,'p[Mal]',0.05,1)
     save_results(res)
+    write_table(res)
     sys.exit()

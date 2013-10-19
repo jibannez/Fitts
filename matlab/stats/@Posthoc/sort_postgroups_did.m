@@ -9,23 +9,43 @@ grp=strcmp('grp',fin);
 ss=strcmp('ss',fin);
 did=strcmp('did',fin);
 
+% if any(grp)
+%     fout{1}='grp';
+%     if any(did)
+%         fout{2}='did';
+%         if any(ss)
+%             fout{3}='ss';
+%         end
+%     elseif any(ss)
+%         fout{2}='ss';
+%     end
+% elseif any(did)
+%     fout{1}='did';
+%     if any(ss)
+%         fout{2}='ss';
+%     end
+% elseif any(ss)
+%     fout{1}='ss';
+% else
+%     error('Something is wrong with your factors. Please check')
+% end
 if any(grp)
     fout{1}='grp';
-    if any(did)
-        fout{2}='did';
-        if any(ss)
-            fout{3}='ss';
-        end
-    elseif any(ss)
-        fout{2}='ss';
-    end
-elseif any(did)
-    fout{1}='did';
     if any(ss)
         fout{2}='ss';
+        if any(did)
+            fout{3}='did';
+        end
+    elseif any(did)
+        fout{2}='did';
     end
 elseif any(ss)
     fout{1}='ss';
+    if any(did)
+        fout{2}='did';
+    end
+elseif any(did)
+    fout{1}='did';
 else
     error('Something is wrong with your factors. Please check')
 end

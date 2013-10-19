@@ -1,10 +1,6 @@
 function max_pq=find_best_pq(ls,method)
     if nargin==1,method=1;end
     max_pq=zeros(3,1); 
-%     if method==1
-%         figure;
-%         hold on;
-%     end
     for p=1:20
         for q=1:20
             if method==1
@@ -23,14 +19,7 @@ function max_pq=find_best_pq(ls,method)
                 if fls>max_pq(1)
                     max_pq=[fls,p,q];
                 end
-%                 if nargout==0
-%                     plot(ls.freqs,SlowPxx_t,'b');
-%                     plot(ls.freqs,ls.SlowPxx,'r');
-%                     plot(ls.freqs,ls.FastPxx,'g');
-%                     plot(ls.freqs,ls.FastPxx_t,'k');
-%                 end
             end
         end
     end
-    %hold off;
 end

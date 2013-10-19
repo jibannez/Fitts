@@ -1,13 +1,13 @@
 function showholmbyfactor(phoc,rno)
     res=phoc.results{rno};
-    holmmat=res.holmmat;
+    holmmat=res.Holmmat;
     data=res.data;
     factors=res.factors;
     
     flen=size(data);
     reps=flen(end);
 
-    disp(repmat('=',1,80))
+    disp(repmat('=',1,60))
     switch length(factors)
         case 1
             disp('Not necessary to do a cross level analysis');
@@ -136,7 +136,7 @@ function showholmbyfactor(phoc,rno)
             end
             
     end
-    disp(repmat('=',1,80))
+    disp(repmat('=',1,60))
 end
 function hval = get_holm(holmmat,p1,p2,flen)
    switch length(flen)

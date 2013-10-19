@@ -26,78 +26,83 @@ classdef DataSets < handle
         ppdata=DataSets.empty(10,0)
         savepath
         savepathR
+        statspath
+        plotpath
         Rpath
         Pythonpath
-    end 
-
+    end
+    
+    properties(SetObservable = true)
+        DIDmode='6levels2'
+    end
     properties (Hidden=true)
+        %Global configurations for plots
+        ext
+        dpi
+        col2inches
+        aureumprop
+        do_legend
+        do_anotations
+        do_title
+        do_ylabel
+        do_grids
+        do_latex
+        do_ticks
+        do_yticklabels
+        plot_type       
+        figsize
+        fontname
+        fontnamelatex
+        fontsize         
+        
         %Global variables representing the structure the experiment        
         conf=Config()
         name
-        vtypes={'osc','vf','ls'}
-        C=[2,3,6,8,9]
-        U=[1,4,5,7,10]        
-        DIDmode='3levels'
-        excludeVars={'MTOwn','MTOther','IDOwn','IDOther','IDOwnEf','IDOtherEf'}
-        pp_by_groups=[[2,3,6,8,9];[1,4,5,7,10]]
+        vtypes
+        C
+        U       
+        pp_by_groups
+        ppbygrp
         vnoB
         vnoU
-        hands=2
-        hno=2
-        idl=2
-        idr=3
-        ss=3
-        rep=3
-        grps=10
-        analvars={'MTL','MTR','accQL','accQR','IPerfEfR','IPerfEfL',...
-                  'HarmonicityL','HarmonicityR','vfCircularityR','vfCircularityL','maxangleL','maxangleR',...
-                  'rho','flsPC','phDiffStd','minPeakDelay','DID_rho','DID_flsPC','DID_phDiffStd','DID_minPeakDelay'}
-
+        hands
+        hno
+        idl
+        idr
+        ss
+        rep
+        grps
+        
+        
         %Plot globals
-        cnames={'Strong','Weak'}
-        lnames={'Easy','Difficult'}
-        rnames={'Easy','Medium','Difficult'}
-        snames={'S1','S2','S3'}
-        dnames={'Zero','Small','Large'}
-        vnames={'MTL','MTR','accQL','accQR','HarmonicityL','HarmonicityR',...
-                'IPerfEfL','IPerfEfR','vfCircularityL','vfCircularityR',...
-                'maxangleL','maxangleR','rho','flsPC','phDiffStd',...
-                'minPeakDelay','minPeakDelayNorm'}
-        vstrns={'MT_L','MT_R','AQ_L','AQ_R','H_L','H_R','IPE_L','IPE_R',...
-                'VFC_L','VFC_R','MA_L','MA_R','\rho','FLS',...
-                '\phi_{\sigma}','dpeaks','dpeaks_{norm}'}
+        cnames
+        lnames
+        rnames
+        snames
+        dnames
+        dnames3
+        dnames6
+        vnames
+        vstrns
         
-        %Define or fetch some globals PLOT_GROUPS            
-        vstrs={'MT','AT','DT','AQ','IPE',...
-              'MA','d3D','d4D','Circularity',...
-              'VFC','VFT','H',...
-              '\rho','FLS','\phi_{\sigma}','MI','dpeaks','dpeaks_{norm}'};
-        units={' (s)',' (s)',' (s)','',' (bits/s)',...
-              '(rad)','','','',...
-              '','','',...
-              '','','','','(s)','dpeaks_{norm} (s²)'};      
-        titles={'Movement Time','Acceleration Time','Deceleration Time','Acceleration Ratio','Effective Index of Performace',...
-                'Maximal Angle','3D Distance','4D Distance','Circularity',...
-                'Vector Field Circularity','Vector Field Trajectory Circularity','Harmonicity',...
-                '\rho','flsPC','\phi_{\sigma}','Mutual Information','Minimal Peak Delay','Minimal Peak Delay Normalized'};     
+        %Define or fetch some globals for DID PLOT_GROUPS            
+        vstrs
+        units
+        titles
         
-        varsGDID={'rho','flsPC','phDiffStd','MI','minPeakDelay','minPeakDelayNorm','D3D','D4D'};
+        varsDID
+        titlesDID
+        varsGDID
+        titlesGDID
+        varsGDID6
+        titlesGDID6
+        excludeVars
+        analvars
         
-        titlesDID={'rho','flsPC','phDiffStd','MI','minPeakDelay','minPeakDelayNorm','D3D','D4D'};                  
-        
-        ext='png'
-        dpi=300
+        %Flags
         verbose=1
         fid=1
         order=1
-        do_legend=0
-        do_anotations=0
-        do_title=0
-        do_ylabel=1
-        plot_type='subplot'; %'tight' 'figure' 'subplot'       
-        figsize=[0,0,2400,1800];
-
-        %Flags controlling 
         fetch_grouped_data=0
         fetch_raw_data=0 %Not sure it works...
         fetch_relative_data=1        
@@ -116,33 +121,44 @@ classdef DataSets < handle
             %     2.2-Directory containing all participant DataStats
             %  3- passing a Participant object
             %  4- passing an integer indicating dataset or participant name
-            if nargin<1, arg=joinpath(ds.conf.save_path,'ds'); end
+            if nargin<1, arg=''; end
             if ds.fetch_grouped_data, ds.grps=2; else ds.grps=10; end
             if ds.fetch_raw_data, error('Not implemented'); end   
             
-            if strcmp(ds.DIDmode,'3levels')
-                ds.deltaID=[0,1,2];
-            elseif strcmp(ds.DIDmode,'6levels')
-                ds.deltaID=-2:2;
-            elseif strcmp(ds.DIDmode,'4levels')
-                ds.deltaID=[-2,-1,1,2];
-            end
+            ds.set_did_mode()            
+            addlistener(ds,'DIDmode','PostSet',@(src,evnt)set_did_mode(ds));
             
             %Get essential variables and paths
+            experimentdefaults(ds);
+            plotdefaults(ds);
+            %ds.figsize=floor([0,0,1,1/ds.aureumprop]*ds.col2inches*ds.dpi);
+            %set(0,'defaulttextinterpreter','latex')
+            set(0,'DefaultTextFontname', ds.fontname)
+            set(0,'DefaultAxesFontName', ds.fontname)
             ds.get_ANOVA_variables();
             ds.name=ds.conf.name;
-            ds.savepath=joinpath(ds.conf.save_path,'ds');
+            ds.plotpath=ds.conf.plot_path;
+            ds.savepath=joinpath(ds.conf.rout_path,'ds');
+            ds.savepathR=joinpath(ds.conf.rout_path,'dataframes');
+            ds.statspath=joinpath(ds.conf.rout_path,'stats');
             ds.Rpath=joinpath(joinpath(joinpath(joinpath(getuserdir(),'Dropbox'),'dev'),'Bimanual-Fitts'),'R');
             ds.Pythonpath=joinpath(joinpath(joinpath(joinpath(getuserdir(),'Dropbox'),'dev'),'Bimanual-Fitts'),'python');
-            ds.savepathR=joinpath(joinpath(ds.Rpath,'dataframes'),ds.conf.branch_path);
+            
             if ~exist(ds.savepath,'dir'),mkdir(ds.savepath); end            
             if ~exist(ds.savepathR,'dir'),mkdir(ds.savepathR); end
+            if ~exist(ds.statspath,'dir'),mkdir(ds.statspath); end
             
-            ds=ds.get_data(arg);
+            %Get data
+            if isempty(arg)
+                ds=ds.get_data(ds.savepath);
+                ds.name='all';
+            else
+                ds=ds.get_data(arg);
+            end
         end
         
         function ds = get_data(ds,arg)
-            if nargin<2, arg=ds.conf.save_path; end
+            if nargin<2, arg=ds.savepath; end
             
             if isa(arg,'Experiment')
                 ds.get_all_data_averaged(arg);
@@ -182,9 +198,9 @@ classdef DataSets < handle
         end
         
         function plot(ds)
-            ds.plot_posthoc()
-            ds.plot_groups()
             ds.plot_participants()
+            ds.plot_groups()
+            ds.plot_posthoc()
         end
             
         function plot_posthoc(ds)
@@ -193,37 +209,39 @@ classdef DataSets < handle
                 plot(ds.posthoc(keys{k}))
             end
         end
-%         
-%         function plot_groups(ds)
-%         end
-%         
-%         function plot_participants(ds)
-%         end
         
         function analyze_all(ds)
-            ds.export2R()
-            ds.doRstats()
-            ds.parsestats()            
-            ds.get_posthoc()
+            ds.analyze_R()
+            ds.parsestats()     
+            ds.load_interactions()
+            ds.analyze_posthoc()
         end
         
-        function analyze_skipR(ds)
+        function analyze_R(ds)
+            modes={'3levels','6levels2'};
+            for idx=1:2
+                ds.DIDmode=modes{idx};   
+                ds.merge_ID_factors();
+                ds.export2R()
+                ds.doRstats()
+            end
+        end
+        
+        function analyze_noR(ds)
             ds.parsestats()
-            ds.get_posthoc()
+            ds.load_interactions()
+            ds.analyze_posthoc()
         end   
         
-        function analyze(ds)
-            ds.get_posthoc()
-        end
         
-        function doRstats(ds)            
+        function doRstats(ds)
             cmdpath=joinpath(ds.Rpath,'main.R');
-            command=sprintf('Rscript %s',cmdpath);
+            command=sprintf('Rscript %s',cmdpath);  
             status = system(command);
             if status==1
                 disp('no errors reported\n')
             else
-                fprintf('Exit status=%d\n',status)
+                fprintf('R script exit status=%d\n',status)
             end
         end
         
@@ -234,65 +252,77 @@ classdef DataSets < handle
                 disp('no errors reported\n')
             else
                 fprintf('Exit status=%d\n',status)
-            end
-            ds.load_interactions();
+            end            
         end
         
-        function get_posthoc(ds)
-            if isempty(ds.analvars) | strcmp(ds.analvars,'all')
-                %Plot all variables if vnames were not selected by user
+        function analyze_posthoc(ds)
+            %if ~isempty(ds.analvars) | strcmp(ds.analvars,'all')
+            %Plot all variables if vnames were not selected by user
                 for v=1:length(ds.flists)
                     flist=ds.flists{v};
                     vname=flist{1};
+                    if ~any(strcmp(vname,ds.analvars))
+                        continue
+                    end
                     %fprintf(fid,'Analysis of variable %s\n',vname);
                     if length(flist)==1
                         continue;
                     elseif length(vname)>3 && strcmp(vname(1:3),'Uni')
                         continue
                     elseif length(vname)>3 && strcmp(vname(end-2:end),'rel')
-                        ds.posthoc(vname)=PostHoc(ds,vname(1:end-3), ds.dataRel,flist{2:end},1);
-                    elseif length(vname)>3 && strcmp(vname(1:4),'DID_')
-                        ds.posthoc(vname)=PostHoc(ds,vname(5:end), ds.dataD, flist{2:end},0,1);           
+                        vn=vname(1:end-3);
+                        ds.posthoc(vname)=PostHoc(ds,vn,vn, ds.dataRel,flist{2:end},1,0);
+                    elseif length(vname)>3 && strcmp(vname(1:5),'DID6_')
+                        ds.DIDmode='6levels2';
+                        vn=vname(6:end);
+                        vs=ds.titlesGDID6{strcmp(vn,ds.varsGDID6)};
+                        ds.merge_ID_factors();
+                        ds.posthoc(vname)=PostHoc(ds,vn,vs, ds.dataD, flist{2:end},0,1);           
+                    elseif length(vname)>3 && strcmp(vname(1:5),'DID3_')
+                        ds.DIDmode='3levels';                        
+                        vn=vname(6:end);
+                        vs=ds.titlesGDID{strcmp(vn,ds.varsGDID)};
+                        ds.merge_ID_factors();
+                        ds.posthoc(vname)=PostHoc(ds,vn,vs, ds.dataD, flist{2:end},0,1);    
                     else
-                        ds.posthoc(vname)=PostHoc(ds, vname, ds.dataB, flist{2:end});
+                        ds.posthoc(vname)=PostHoc(ds, vname,vname, ds.dataB, flist{2:end},0,0);
                     end
                 end
-            else
-                %Plot variables selected by user
-                for v=1:length(ds.analvars)
-                    vname=ds.analvars{v};
-                    idx=strcmp(vname,ds.fvnames);                    
-                    if length(ds.flists{idx})==1
-                        continue;
-                    else
-                        interactions=ds.flists{idx}{2};
-                    end
-                    if any(idx)
-                        %fprintf(fid,'Analysis of variable %s\n',vname);
-                        if length(vname)>3 && strcmp(vname(1:4),'DID_')  
-                            ds.posthoc(vname)=PostHoc(ds,vname(5:end), ds.dataD, interactions, 0, 1);
-                        else      
-                            ds.posthoc(vname)=PostHoc(ds,vname, ds.dataB, interactions);
-                            if ds.dorel
-                                idx=strcmp([vname,'rel'], ds.fvnames);
-                                if length(ds.flists{idx})==1
-                                    continue;
-                                else
-                                    interactions=ds.flists{idx}{2};
-                                end
-                                if any(idx)
-                                    %fprintf(fid,'Analysis of variable %srel\n',vname);
-                                    ds.posthoc(vname)=PostHoc(ds,vname, ds.dataRel, interactions, 1);
-                                end
-                            end
-                        end
-                    else
-                        disp(['unknown variable ',vname])
-                    end
-                end
-            %fclose(fid);    
-            end    
-            
+%             else
+%             %Plot variables selected by user
+%                 for v=1:length(ds.analvars)
+%                     vname=ds.analvars{v};
+%                     idx=strcmp(vname,ds.fvnames);                    
+%                     if length(ds.flists{idx})==1
+%                         continue;
+%                     else
+%                         interactions=ds.flists{idx}{2};
+%                     end
+%                     if any(idx)
+%                         %fprintf(fid,'Analysis of variable %s\n',vname);
+%                         if length(vname)>3 && strcmp(vname(1:4),'DID_')  
+%                             ds.posthoc(vname)=PostHoc(ds,vname(5:end), ds.dataD, interactions, 0, 1);
+%                         else      
+%                             ds.posthoc(vname)=PostHoc(ds,vname, ds.dataB, interactions);
+%                             if ds.dorel
+%                                 idx=strcmp([vname,'rel'], ds.fvnames);
+%                                 if length(ds.flists{idx})==1
+%                                     continue;
+%                                 else
+%                                     interactions=ds.flists{idx}{2};
+%                                 end
+%                                 if any(idx)
+%                                     %fprintf(fid,'Analysis of variable %srel\n',vname);
+%                                     ds.posthoc(vname)=PostHoc(ds,vname, ds.dataRel, interactions, 1);
+%                                 end
+%                             end
+%                         end
+%                     else
+%                         disp(['unknown variable ',vname])
+%                     end
+%                 end
+%             %fclose(fid);    
+%             end    
         end
     end
     
@@ -305,11 +335,11 @@ classdef DataSets < handle
         get_all_data_averaged(ds)
         get_all_data_raw(ds)
         get_data_rel(ds)
-        get_pp_data_averaged(ds,pp)
-        set_did_mode(ds)        
+        get_pp_data_averaged(ds,pp)               
         get_ANOVA_variables(ds)        
         merge_pp_dir(ds,dirpath)
-        load_interactions(ds)
+        set_did_mode(ds) 
+        %load_interactions(ds)
     end
     
 end

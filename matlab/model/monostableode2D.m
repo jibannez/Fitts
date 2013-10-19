@@ -1,12 +1,9 @@
 function dydt = monostableode2D(t,y,kk,w1,w2,a1,a2,b1,b2,c1,c2,d1,d2,alpha,tau1,tau2)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Model equations:
-    %   dy1_dt = -tau1*(w1 + a1*sin(2*(y1-c1)+d1) + b1*cos(4*(y1-c1)) + alpha*sin(y2-y1) )
-    %   dy2_dt = -tau2*(w2 + a2*sin(2*(y2-c2)+d2) + b2*cos(4*(y2-c2)) + alpha*sin(y1-y2) ) 
+    %   dy1_dt = -(w1 + tau1*(a1*sin(2*(y1-c1)+d1) + b1*cos(4*(y1-c1))) + alpha*sin(y2-y1) + I1)
+    %   dy2_dt = -(w2 + tau2*(a2*sin(2*(y2-c2)+d2) + b2*cos(4*(y2-c2))) + alpha*sin(y1-y2) + I2) 
     %
-    % Parameter values (Easy vs Difficult):
-    %   w1,   w2,  a1,  a2,  b1,  b2,  c1,     c2,      d1,      d2,   alpha
-    %   11.0, 3.5, 3.0, 2.0, 1.0, 0.8, 1.5708, 1.0472, -1.5708,  0.0,  0.2
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
@@ -51,7 +48,7 @@ function dydt = monostableode2D(t,y,kk,w1,w2,a1,a2,b1,b2,c1,c2,d1,d2,alpha,tau1,
     end
     
     %Compute differential equation
-    dydt=[-1*( w1 + tau1*(a1*sin(2*(y(1)-c1)+d1) + b1*cos(4*(y(1)-c1))) + alpha*sin(y(2)-y(1)) + I(1)) ;...
-          -1*( w2 + tau2*(a2*sin(2*(y(2)-c2)+d2) + b2*cos(4*(y(2)-c2))) + alpha*sin(y(1)-y(2)) + I(2))];
+    dydt=[-1*( w1 + tau1*(a1*sin(2*(y(1)-c1)+d1) + b1*cos(4*(y(1)-c1))) + alpha*sin(y(1)-y(2)) + I(1)) ;...
+          -1*( w2 + tau2*(a2*sin(2*(y(2)-c2)+d2) + b2*cos(4*(y(2)-c2))) + alpha*sin(y(2)-y(1)) + I(2))];
 
 end

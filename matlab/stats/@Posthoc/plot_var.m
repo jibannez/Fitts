@@ -1,20 +1,11 @@
 function plot_var(phoc)
-    %Set label for the current variable name
-    vn=strcmp(phoc.vname,phoc.ds.analvars);
-    
-    if any(vn)        
-        vstr=phoc.ds.vstrns{vn};
-    else
-        phoc.vname
-        phoc.ds.analvars
-        error(['Unknown variable: ',phoc.vname]);
-    end
+  
+    vstr=phoc.vstr;
     
     %Create directory to store plots if needed
     if  ~exist(phoc.savepath,'dir')
         mkdir(phoc.savepath);
     end
-    
     
     %Iterate over interactions
     for f=1:length(phoc.flists)
@@ -168,8 +159,9 @@ function plot_bw(data,factor,vname,ax)
     gp=get_props({'',factor});
     boxplot(ax,data')
     title(factor)
-    ylabel(vname);    
-    set(ax,'XTick',gp.x,'XTicklabel',gp.xticklabels);    
+    ylabel(vname);  
+    format_ticks(ax,gp.x,[],gp.xticklabels,[]);
+    %set(ax,'XTick',gp.x,'XTicklabel',gp.xticklabels);    
 end
 
 
@@ -194,18 +186,24 @@ function [bar_data,gp]=plot_interaction(data,factors,vname,ax,do_legend,do_ylabe
     h=cell(f1,1);
     hold on
     for i=1:f1
-        h{i}=errorbar(ax,gp.x,bar_data(i,:,1),bar_data(i,:,2),'Color',gp.colors{i});        
+        %h{i}=errorbar(ax,gp.x,bar_data(i,:,1),bar_data(i,:,2),'Color',gp.colors{i});   
+        
+        %h{i}=errorbar(ax,gp.x,bar_data(i,:,1),bar_data(i,:,2),'LineSpec',gp.linespec{i});        
+        plot(ax, gp.x, bar_data(i,:,1), gp.linespec{i} );
+        h{i}=errorbar(ax,gp.x,bar_data(i,:,1),bar_data(i,:,2),'LineSpec','none');     
     end
-    hold off
+    %hold off
     
-    set(ax,'XTick',gp.x,'XTicklabel',gp.xticklabels);  
+    %set(ax,'XTick',gp.x,'XTicklabel',gp.xticklabels);  
+    format_ticks(ax,gp.x,[],gp.xticklabels,[]);
+    
     if do_ylabel
-        ylabel(vname);
+        ylabel(vname,'interpreter','latex', 'FontName', 'Arial');
     end
     if do_legend
-        legend(gp.labels')%,'Location','BestOutside')
+        legend(gp.labels','interpreter','latex', 'FontName', 'Arial')%,'Location','BestOutside')
     end
-    title(sprintf('%s vs %s',factors{1},factors{2}));
+    title(sprintf('%s vs %s',factors{1},factors{2}),'interpreter','latex', 'FontName', 'Arial');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,8 +316,9 @@ function save_fig(phoc,factors)
         if strcmp(phoc.ds.ext,'fig')
             hgsave(gcf,figname,'all');
         else
-            set(gcf, 'PaperUnits', 'inches', 'PaperPosition', get_fig_position(factors)/phoc.ds.dpi);
-            print(gcf,['-d',phoc.ds.ext],sprintf('-r%d',phoc.ds.dpi),figname);        
+            set(gcf, 'PaperUnits', 'inches', 'PaperPosition', get_fig_position(phoc,factors)./phoc.ds.dpi);
+            mlf2pdf(gcf,figname)
+            %print(gcf,['-d',phoc.ds.ext],sprintf('-r%d',phoc.ds.dpi),figname);        
             close gcf
         end
     end
@@ -327,13 +326,15 @@ end
 
 function create_fig(phoc,factors)
     if ~isempty(phoc.savepath)
-        figure('name',[factors{:}],'numbertitle','off','PaperUnits', 'inches', 'PaperPosition', get_fig_position(factors)/phoc.ds.dpi,'Visible','off');
+        figure('name',[factors{:}],'numbertitle','off','PaperUnits', 'inches', 'PaperPosition', get_fig_position(phoc,factors)./phoc.ds.dpi,'Visible','off');
     else
         figure('name',[factors{:}],'numbertitle','off');
     end
 end
 
-function rect=get_fig_position(factors)
+function rect=get_fig_position(phoc,factors)
+   rect=phoc.ds.figsize;
+   return
    switch length(factors)
        case 1
            rect=[0,0,1200,1400];
@@ -359,21 +360,25 @@ function gp = get_props(factors)
     %Fill factor 1 related graphic properties
     if strcmp('grp',factors{1}) 
         gp.colors={[1,0.2,0.2],[0.2,0.2,1]};
+        gp.linespec={'-ok','-.xk'};
         gp.labels={'Strong Coupling','Weak Coupling'};
         gp.f1={'S','W'};
         gp.f1name='group';
     elseif strcmp('ss',factors{1})
         gp.colors={[1,0.2,0.2],[0.2,0.2,1],[0.2,1,0.2]};
+        gp.linespec={'-ok','-.xk',':dk'};
         gp.labels={'S1','S2','S3'};
         gp.f1=gp.labels;
         gp.f1name='session';
     elseif strcmp('idl',factors{1})
         gp.colors={[1,0.2,0.2],[0.2,0.2,1]};
+        gp.linespec={'-ok','-.xk'};
         gp.labels={'IDL Easy','IDL Difficult'};
         gp.f1={'LE','LD'};
         gp.f1name='left id';
     else
         gp.colors={[1,0.2,0.2],[0.2,0.2,1],[0.2,1,0.2]};
+        gp.linespec={'-ok','-.xk',':dk'};
         gp.labels={'IDR Easy','IDR Medium','IDR Difficult'};
         gp.f1={'RE','RM','RD'};
         gp.f1name='rigth id';
@@ -404,7 +409,7 @@ end
 
 function yrange=get_yrange(vdata)
     vsize=size(vdata);
-    yrange=[];
+    yrange=[0,0];
     switch length(vsize)
        case 2    
             for i=1:vsize(1)
@@ -443,8 +448,9 @@ function yrange=get_yrange(vdata)
 end
 
 function yrange = compare_range(data,yrange)
-    ymin=mean(data(:))-std(data(:));    
-    ymax=mean(data(:))+std(data(:));    
+
+    ymin=mean(data(:));%-std(data(:));    
+    ymax=mean(data(:));%+std(data(:));    
     if isempty(yrange)
         yrange=[ymin,ymax];
     else

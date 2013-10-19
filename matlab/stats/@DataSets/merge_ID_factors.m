@@ -8,6 +8,23 @@ function merge_ID_factors(ds)
     end
     
     switch ds.DIDmode
+        case '3levels'
+            ds.dataD=zeros(vno,hno, pp, ss, length(ds.deltaID), reps);            
+            for v=1:vno                
+                for h=1:hno
+                    for p=1:pp
+                        for s=1:ss
+                            for l=1:idl
+                                for r=1:idr
+                                    did=abs(r-llevels(l));                                    
+                                    i = ds.deltaID==did;
+                                    ds.dataD(v,h,p,s,i,:)=squeeze(bidata(v,h,p,s,l,r,:));
+                                end
+                            end
+                        end
+                    end
+                end
+            end                
         case '4levels'
             ds.dataD=zeros(vno,hno,pp, ss, length(ds.deltaID), reps);
             for v=1:vno
@@ -34,24 +51,107 @@ function merge_ID_factors(ds)
                     end
                 end
             end           
-        case '3levels'
+        case '6levels'
             ds.dataD=zeros(vno,hno, pp, ss, length(ds.deltaID), reps);
+            %hand=1 -> Left
+            %hand=2 -> Right
             for v=1:vno
                 for h=1:hno
                     for p=1:pp
                         for s=1:ss
                             for l=1:idl
                                 for r=1:idr
-                                    did=abs(r-llevels(l));                                    
-                                    i = ds.deltaID==did;
+                                    did=r-llevels(l);
+                                    if did>0
+                                        if h==1
+                                            did=4+did;  %Contra Large = 6
+                                                        %Contra Small = 5
+                                        else
+                                            did=3-did;  %Ipsi Large   = 1
+                                                        %Ipsi Small   = 2
+                                        end
+                                    elseif did<0
+                                        if h==2
+                                            did=4-did;  %Contra Large = 6
+                                                        %Contra Small = 5
+                                        else
+                                            did=3+did;  %Ipsi Large   = 1
+                                                        %Ipsi Small   = 2
+                                        end                                        
+                                    elseif did==0 
+                                        if l==1         %Easy Both    = 4
+                                            did=4;
+                                        else            %Diff Both    = 3
+                                            did=3;
+                                        end
+                                    else
+                                        error('Impossible!!!')
+                                    end
+                                    i= ds.deltaID==did;                                    
                                     ds.dataD(v,h,p,s,i,:)=squeeze(bidata(v,h,p,s,l,r,:));
                                 end
                             end
                         end
                     end
                 end
-            end        
-        case '6levels'
+            end  
+        case '6levels2'
+            ds.dataD=zeros(vno, hno, pp, ss, length(ds.deltaID), reps*hno);
+            %hand=1 -> Left
+            %hand=2 -> Right
+            for v=1:vno
+                isls=0;
+                if strcmp(ds.vtypesB{v},'ls')
+                    isls=1;
+                end                
+                for h=1:hno
+                    for p=1:pp
+                        for s=1:ss
+                            for l=1:idl
+                                for r=1:idr
+                                    did=r-llevels(l);
+                                    if did>0
+                                        if h==1
+                                            did=4+did;  %Contra Large = 6
+                                                        %Contra Small = 5
+                                        else
+                                            did=3-did;  %Ipsi Large   = 1
+                                                        %Ipsi Small   = 2
+                                        end
+                                    elseif did<0
+                                        if h==2
+                                            did=4-did;  %Contra Large = 6
+                                                        %Contra Small = 5
+                                        else
+                                            did=3+did;  %Ipsi Large   = 1
+                                                        %Ipsi Small   = 2
+                                        end                                        
+                                    elseif did==0 
+                                        if l==1         %Easy Both    = 4
+                                            did=4;
+                                        else            %Diff Both    = 3
+                                            did=3;
+                                        end
+                                    else
+                                        error('Impossible!!!')
+                                    end
+                                    i= ds.deltaID==did;
+                                    for rep=1:reps
+                                        if isls
+                                            ds.dataD(v,1,p,s,i,rep+(h-1)*reps)=bidata(v,1,p,s,l,r,rep);
+                                            ds.dataD(v,2,p,s,i,rep+(h-1)*reps)=bidata(v,1,p,s,l,r,rep);
+                                        else
+                                            ds.dataD(v,1,p,s,i,rep+(h-1)*reps)=bidata(v,h,p,s,l,r,rep);
+                                            ds.dataD(v,2,p,s,i,rep+(h-1)*reps)=bidata(v,h,p,s,l,r,rep);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end            
+        case '6levelsold'
             ds.dataD=zeros(vno,hno, pp, ss, length(ds.deltaID), reps);
             for v=1:vno
                 for h=1:hno
@@ -70,7 +170,7 @@ function merge_ID_factors(ds)
                         end
                     end
                 end
-            end
+            end            
         case 'subsample'
             ds.dataD=zeros(vno,hno, pp, ss, length(ds.deltaID), reps);
             for v=1:vno

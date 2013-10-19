@@ -15,8 +15,10 @@ function [MI,H]=Kulback_Leibler_distance(x,N)
 
 x=x(:)'; 
 
-% compute istogram
-[H,B]=hist(x,N);
+% compute histogram
+xvalues=linspace(-pi,pi,N);
+[H,B]=hist(x,xvalues);
+%[H,B]=hist(x,N);
 H=H/sum(H);
 
 % create uniform distribution

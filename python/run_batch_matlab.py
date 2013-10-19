@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
 import os, sys, subprocess
@@ -13,24 +13,25 @@ if not os.path.exists(BATCH_DIR):
 
 
 WRKs=2
-PPno=10
 PPs=range(1,11)
-#PPs=[9]
-#PPno=len(PPs)
+#PPs=[2,5]
+PPno=len(PPs)
 
 TEMPLATE_FULL,\
 TEMPLATE_FULL2,\
+TEMPLATE_MODEL,\
 TEMPLATE_LOAD_SAVE,\
 TEMPLATE_LOAD_SAVE_PLOT,\
 TEMPLATE_GET_DATA,\
 TEMPLATE_ANALYSIS,\
+TEMPLATE_UPDATE_LS,\
 TEMPLATE_PLOT_ANALYSIS,\
 TEMPLATE_PLOT_ANGULAR,\
 TEMPLATE_PLOT, \
-TEMPLATE_PLOT_VF = range(10)
+TEMPLATE_PLOT_VF,\
+TEMPLATE_PLOT_MODELPH= range(13)
 
-template=TEMPLATE_FULL
-
+template=TEMPLATE_GET_DATA
 def write_scripts(pp):    
     #Open file to write script
     filename="pp%03d.m" % pp
@@ -40,7 +41,7 @@ def write_scripts(pp):
     #Write text to file and close
     f.write(get_script_from_template(template,pp))
     f.close()
-    return "sleep %d; nohup /opt/matlab2012/bin/matlab -nodesktop -nosplash -r %s > /dev/null" % (pp,filename[:-2])
+    return "sleep %d; nohup /opt/matlab2012/bin/matlab -nodesktop -nosplash -r %s > /home/jorge/%03d.out" % (pp,filename[:-2],pp)
 
 def get_script_from_template(tpl,pp):
     if tpl==TEMPLATE_FULL:
@@ -59,6 +60,12 @@ def get_script_from_template(tpl,pp):
         p.save(); 
         obj = get_pp_data(p);
         save(joinpath(conf.save_path,'pp%02d_data.mat'),'obj'); exit""" % (pp,pp) 
+    elif tpl==TEMPLATE_MODEL:
+        msg="""\
+        conf=Config();
+        p=Participant(%d);
+        [resB,resR,resL]=fitpp(p);        
+        save(joinpath(conf.save_path,'pp%02d_modelresults.mat'),'resR','resL','resB'); exit""" % (pp,pp)         
     elif tpl==TEMPLATE_LOAD_SAVE:
         msg="""\
         conf=Config();
@@ -75,13 +82,21 @@ def get_script_from_template(tpl,pp):
         msg="""\
         RandStream.setGlobalStream(RandStream('mt19937ar','seed',sum(100*clock)));
         conf=Config();
-        obj = get_pp_data(%d);
-        save(joinpath(conf.save_path,'pp%02d_data.mat'),'obj'); exit""" % (pp,pp)
+        conf.parallelMode=0;
+        p=Participant(%d,conf);         
+        ds=DataSets(p); save(ds);exit""" % pp
     elif tpl==TEMPLATE_ANALYSIS:
         msg="""\
         an=Analysis(%d);
         an.save(%d);
         exit""" % (pp,pp)
+    elif tpl==TEMPLATE_UPDATE_LS:
+        msg="""\
+        p=Participant(%d);
+        p.update_ls();
+        p.save();
+        exit""" % pp
+            
     elif tpl==TEMPLATE_PLOT_ANALYSIS:
         msg="""\
         conf=Config();
@@ -117,6 +132,13 @@ def get_script_from_template(tpl,pp):
         conf.parallelMode=0;
         p=Participant.load(%d,conf);
         p.plot_va();exit""" % pp
+    elif tpl==TEMPLATE_PLOT_MODELPH:
+        msg="""\
+        cd Dropbox
+        load f5
+        sims=simulamil(f5_tr%d,15);
+        save('sims%d','sims');
+        exit""" % (pp,pp)        
     else:
         return "Wrong template type"
     return msg

@@ -5,8 +5,8 @@ function res=analyze_var(phoc,factors)
     res = struct();
 
     if phoc.isdid
-        if strcmp('all',factors),
-            factors={'grp','did','ss'};
+        if strcmp('all',factors)
+            factors={'grp','ss','did'};
         else
             factors=phoc.sort_postgroups_did(factors);
         end

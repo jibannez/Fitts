@@ -9,7 +9,7 @@ function export2R(ds,filename,savepath)
     export_matrix(out,header,joinpath(savepath,['Bi_' filename]));
     
     %Fetch and export Bimanual Delta ID header and matrix
-    [header,vnames2]=build_headers({'grp' 'pp' 'S' 'DID'},ds.vnamesB,ds.vtypesB,ds.excludeVars);
+    [header,vnames2]=build_headers({'grp' 'pp' 'S' 'DID'},ds.varsDID,ds.vtypesB,ds.excludeVars);
     out = get_rowdata(ds.dataD,ds.vtypesB,ds.vnamesB,vnames2,header,ds.pp_by_groups);  
     export_matrix(out,header,joinpath(savepath,['BiDelta_' filename]));
     
@@ -42,7 +42,9 @@ end
 function out = get_rowdata(data,vartypes,varnames1,varnames2,header,pp_by_groups)    
     %Build output data frames
     grp=size(pp_by_groups,1);
-    
+    bimanual=0;
+    did=0;
+    idl=0;
     if length(size(data))==7
         [vno,h,pp,ss,idl,idr,reps]=size(data);
         out =zeros(grp*ss*idl*idr*reps,length(header));
@@ -50,13 +52,11 @@ function out = get_rowdata(data,vartypes,varnames1,varnames2,header,pp_by_groups
     elseif length(size(data))==6
         [vno,h,pp,ss,id,reps]=size(data);
         out =zeros(grp*ss*id*reps,length(header));
-        bimanual=1;
-        idl=0;
+        bimanual=0;
+        did=1;
     else 
         [vno,pp,ss,id,reps]=size(data);
-        out =zeros(grp*ss*id*reps,length(header));
-        bimanual=0;
-        idl=0;
+        out =zeros(grp*ss*id*reps,length(header)); 
     end
     
     %Iterate!!
@@ -65,28 +65,30 @@ function out = get_rowdata(data,vartypes,varnames1,varnames2,header,pp_by_groups
         for p=pp_by_groups(g,:)
             for s=1:ss
                 %Unimanual and ID diff blocks
-                if ~idl
+                if ~idl && bimanual==0
                     for i=1:id
                        for rep=1:reps
                             idx=idx+1;
                             %Fetch bimanual data
                             row=[g,p,s,i];
                             for v=1:length(varnames2)
+%                                 header
+%                                 v                                
+%                                 varnames2{v}
+%                                 varnames1
                                 v2=strmatch(varnames2{v},varnames1,'exact');
                                 %ID diff blocks
-                                if bimanual
-                                    if strcmp(vartypes{v2},'ls')
-                                        %only one meaningful data per magnitude
-                                        row=[row,data(v2,1,p,s,i,rep)];
-                                    else
-                                        %two meaningful data per magnitude
-                                        row=[row,squeeze(data(v2,:,p,s,i,rep))];
-                                    end
+                                if did
+                                    %'did'
+                                    row=[row,squeeze(data(v2,1,p,s,i,rep))];
                                 %Unimanual blocks
                                 else
+                                    %'un'
                                    row=[row,squeeze(data(v2,p,s,i,rep))];
                                 end
                             end
+%                             size(row)
+%                             size(out(idx,:))                        
                             out(idx,:)=row;
                        end
                     end
@@ -107,8 +109,8 @@ function out = get_rowdata(data,vartypes,varnames1,varnames2,header,pp_by_groups
                                         %Each hand has a value per variable
                                         row=[row,squeeze(data(v2,:,p,s,l,r,rep))];
                                     end
-                                end
-                                out(idx,:)=row;
+                                end                                
+                                out(idx,:)=row(:);
                             end
                         end
                     end
@@ -121,10 +123,16 @@ end
 
 function [header,varnames2]=build_headers(factors,varnames,vartypes,excludeVars)
     header=factors;
+    isdid=0;
+    if any(strcmp('DID',factors))
+        isdid=1;
+    end
     varnames2 = varnames(~ismember(varnames,excludeVars));
-    for v=1:length(varnames2)
+    for v=1:length(varnames2)        
         v2=strmatch(varnames2{v},varnames,'exact');
-        if strcmp(vartypes{v2},'ls')
+        if isdid
+            header{end+1}=varnames{v2};
+        elseif strcmp(vartypes{v2},'ls')
             %only one meaningful data per variable
             header{end+1}=varnames{v2};
         elseif any(strcmp('IDL',factors)) || any(strcmp('DID',factors))

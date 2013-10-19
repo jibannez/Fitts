@@ -134,7 +134,7 @@ classdef VectorField < handle
        
        function circularity = get.vfCircularity(obj)
            vfc=obj.get_VF_circularity(1);
-           circularity=median(vfc(~isnan(vfc)));
+           circularity=pi/2-median(vfc(~isnan(vfc)));
            %circularity=nanmedian(nanmedian(obj.get_VF_circularity(1)));
        end
        

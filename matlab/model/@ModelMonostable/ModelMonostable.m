@@ -14,6 +14,7 @@ classdef ModelMonostable < handle
         parnames
         IC
         tspan
+        isauto=0
     end
     
     properties
@@ -47,7 +48,6 @@ classdef ModelMonostable < handle
         phcosdot
         phsindot  
         phdiff
-        omeganorm
         d4D
         fs
         pdelay
@@ -66,7 +66,9 @@ classdef ModelMonostable < handle
         v2peaks
         ph2peaks        
         idx2
-        idx        
+        idx    
+        MT1
+        MT2
         %Cartesian Time series
         x
         v
@@ -86,6 +88,12 @@ classdef ModelMonostable < handle
         xnorm2
         vnorm2
         anorm2
+        omega
+        omega1
+        omega2
+        omeganorm
+        omeganorm1
+        omeganorm2
         %Cartesian ts-based histograms
         x_hist
         v_hist
@@ -156,6 +164,9 @@ classdef ModelMonostable < handle
         phDiff
         phDiffMean
         phDiffStd
+        p_KLD
+        q_KLD
+        KLD
         rho        
         p
         q
@@ -183,11 +194,19 @@ classdef ModelMonostable < handle
             if nargin<2, conf=ModelConfig(); end
             
             if any(strcmp({'em','ed1','ed3','md3'},name))
-                mdl.stype=2;
+                mdl.stype=2;                
                 mdl.params=num2cell(conf.params2Dmonostablebyname(name));
             elseif any(strcmp({'e','m1','m3','d'},name))
                 mdl.stype=1;
                 mdl.params=num2cell(conf.params1Dmonostablebyname(name));
+            elseif strcmp('auto1D',name)
+                mdl.stype=1;
+                mdl.isauto=1;
+                mdl.params=num2cell(conf.params1Dmonostablebyname('d'));
+            elseif strcmp('auto2D',name)
+                mdl.stype=2;
+                mdl.isauto=1;
+                mdl.params=num2cell(conf.params2Dmonostablebyname('ed1'));
             else
                 error('Unknow model type. Possible model names are e,m1,m3,d,em,ed,md')               
             end
@@ -232,13 +251,14 @@ classdef ModelMonostable < handle
             mdl.ph    = [];
         end
         
-        function pfit=fit(mdl,tr,do_plot)
+        function pfit=fit(mdl,tr,do_plot,alpha)
+            if nargin<4, alpha=0.0; end
             if nargin<3, do_plot=1; end
 
             if mdl.stype < 2 
                 pfit=mdl.fit_trial1D(tr,do_plot);
             else
-                pfit=mdl.fit_trial2D(tr,do_plot);
+                pfit=mdl.fit_trial2D(tr,do_plot,alpha);
             end
         end
 
@@ -247,8 +267,7 @@ classdef ModelMonostable < handle
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %Simulated time series
-        
+        %Simulated time series        
         function phmod = get.phmod(mdl)
             if mdl.stype<2
                 phmod=atan2(mdl.phsin,mdl.phcos);
@@ -320,15 +339,58 @@ classdef ModelMonostable < handle
             end
         end
 
-        function omeganorm = get.omeganorm(mdl)
+        function omega = get.omega(mdl)
             if mdl.stype<2
-                omeganorm=mdl.phdot./min(mdl.phdot);
+                omega=mdl.phdot(mdl.idx)./min(mdl.phdot(mdl.idx));
             else
-                omeganorm=[mdl.phdot(:,1)/min(mdl.phdot(:,1)),...
-                           mdl.phdot(:,2)/min(mdl.phdot(:,2))];
+                omega=[mdl.phdot(mdl.idx1,1),...
+                       mdl.phdot(mdl.idx2,2)];
             end
         end
 
+         
+        function omega1 = get.omega1(mdl)
+            if mdl.stype<2
+                omega1=[];
+            else
+                omega1=mdl.phdot(mdl.idx1,1);
+            end
+        end
+        
+        function omega2 = get.omega2(mdl)
+            if mdl.stype<2
+                omega2=[];
+            else
+                omega2=mdl.phdot(mdl.idx2,2);
+            end
+        end        
+        
+        function omeganorm = get.omeganorm(mdl)
+            if mdl.stype<2
+                omeganorm=mdl.phdot(mdl.idx)./min(mdl.phdot(mdl.idx));
+            else
+                omeganorm=[mdl.phdot(mdl.idx1,1)/min(mdl.phdot(mdl.idx1,1)),...
+                           mdl.phdot(mdl.idx2,2)/min(mdl.phdot(mdl.idx2,2))];
+            end
+        end
+
+         
+        function omeganorm1 = get.omeganorm1(mdl)
+            if mdl.stype<2
+                omeganorm1=[];
+            else
+                omeganorm1=mdl.phdot(mdl.idx1,1)/min(mdl.phdot(mdl.idx1,1));
+            end
+        end
+        
+        function omeganorm2 = get.omeganorm2(mdl)
+            if mdl.stype<2
+                omeganorm2=[];
+            else
+                omeganorm2=mdl.phdot(mdl.idx2,2)/min(mdl.phdot(mdl.idx2,2));
+            end
+        end
+        
         function d4D = get.d4D(mdl)
             if mdl.stype<2
                 d4D=[];
@@ -430,7 +492,15 @@ classdef ModelMonostable < handle
             end
         end    
 
+        function MT1 = get.MT1(mdl)
+            td=mdl.t(mdl.idx1);
+            MT1=diff(td(mdl.x1peaks));
+        end
         
+        function MT2 = get.MT2(mdl)
+            td=mdl.t(mdl.idx2);
+            MT2=diff(td(mdl.x2peaks));
+        end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function idx2 = get.idx2(mdl)
@@ -474,7 +544,7 @@ classdef ModelMonostable < handle
             if isempty(mdl.t)
                 fs=100;
             else
-                fs=floor(1/mean(diff(mdl.t)));
+                fs=floor(1/median(diff(mdl.t)));
             end
         end
             
@@ -500,56 +570,26 @@ classdef ModelMonostable < handle
             end
         end        
         
+        %Compute minimal peak delay, absolute and relative
         function pdelay = get.pdelay(mdl)
-            Rpeaks=mdl.x2peaks;
-            Lpeaks=mdl.x1peaks;
-            Rlen = length(Rpeaks)-1;  %Extreme are always zeros!
-            Llen = length(Lpeaks)-1;
-            if Llen<Rlen
-                q=round(Rlen/Llen);
-                pdelay=zeros(Llen,1);
-                for i=1:Llen
-                    L=Lpeaks(i);
-                    if q==1
-                        if i==1
-                            R=Rpeaks(1:i+1);
-                        else
-                            R=Rpeaks(i-1:i+1);
-                        end
-                    elseif (i*(q-1))<1
-                        R=Rpeaks(1:i*(q+1));
-                    elseif (i*(q+1))>Rlen
-                        R=Rpeaks(i*(q-1):Rlen);
-                    else
-                        R=Rpeaks(i*(q-1):i*(q+1));
-                    end
-                    [d,j]=min(abs(L-R));
-                    pdelay(i)=d*sign(L-R(j));
+            td1=mdl.t(mdl.idx1);
+            td2=mdl.t(mdl.idx2);
+            Fastpks=td1(mdl.x1peaks);
+            Slowpks=td2(mdl.x2peaks);
+            MT=mdl.MT1;
+            SlowLen = length(Slowpks)-1;
+            pdelay=zeros(SlowLen-2,1);
+            for i=2:SlowLen-1
+                S=Slowpks(i);
+                idx=abs(Fastpks-S)<mean(MT);        
+                if ~any(idx)
+                    idx=abs(Fastpks-S)<(2*mean(MT));
                 end
-            else
-                q=round(Llen/Rlen);
-                pdelay=zeros(Rlen,1);
-                for i=1:Rlen
-                    R=Rpeaks(i);
-                    if q==1
-                        if i==1
-                            L=Lpeaks(1:i+1);
-                        else
-                            L=Lpeaks(i-1:i+1);
-                        end
-                    elseif (i*(q-1))<1
-                        L=Lpeaks(1:i*(q+1));
-                    elseif (i*(q+1))>Llen
-                        L=Lpeaks(i*(q-1):Llen);
-                    else
-                        L=Lpeaks(i*(q-1):i*(q+1));
-                    end
-                    [d,j]=min(abs(R-L));
-                    pdelay(i)=d*sign(L(j)-R);
-                end
+                F=Fastpks(idx);
+                [d,j]=min(abs(S-F));
+                pdelay(i-1)=d*sign(S-F(j));
             end
-            pdelay=pdelay/mdl.fs;
-        end
+        end      
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
         %Kinematic time series
@@ -999,8 +1039,7 @@ classdef ModelMonostable < handle
            if obj.stype<2
                phDiff=[];
            else
-               %phDiff = obj.q*obj.Lph-obj.p*obj.Rph;
-               phDiff= obj.q*obj.ph(:,1)-obj.p*obj.ph(:,2);
+               phDiff= (obj.p_KLD*unwrap(obj.ph(:,2))-obj.q_KLD*unwrap(obj.ph(:,1)))/((obj.p_KLD+obj.q_KLD)/2);
            end
        end
        
@@ -1009,7 +1048,6 @@ classdef ModelMonostable < handle
            if obj.stype<2
                phDiffMean=[];
            else
-               %[phDiffMean,~]=circstat(obj.p_MI*obj.Lph-obj.q_MI*obj.Rph);
                [phDiffMean,~]=circstat(obj.phDiff);
            end
        end
@@ -1019,7 +1057,6 @@ classdef ModelMonostable < handle
            if obj.stype<2
                phDiffStd=[];
            else
-               %[~, phDiffStd]=circstat(obj.p_MI*obj.Lph-obj.q_MI*obj.Rph);
                [~, phDiffStd]=circstat(obj.phDiff);
            end
        end
@@ -1037,6 +1074,37 @@ classdef ModelMonostable < handle
                end
            end
        end    
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       function p_KLD = get.p_KLD(obj)
+           if obj.stype<2
+               p_KLD=[];
+           else
+               pfit=fit([1:length(obj.ph(:,1))]'/obj.fs,unwrap(obj.ph(:,1)),'poly1');
+               p_KLD=-pfit.p1;
+           end
+       end
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       function q_KLD = get.q_KLD(obj)
+           if obj.stype<2
+               q_KLD=[];
+           else
+               pfit=fit([1:length(obj.ph(:,2))]'/obj.fs,unwrap(obj.ph(:,2)),'poly1');
+               q_KLD=-pfit.p1; 
+           end
+       end
+       
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+       function KLD = get.KLD(obj)
+           if obj.stype<2
+               KLD=[];
+           else
+               %Get Kulback-Leiber distance between phase difference and uniform distribution
+                %[KLD,~]=Kulback_Leibler_distance(filterdata(obj.phDiff,0.1),16);
+                [KLD,~]=Kulback_Leibler_distance(obj.phDiff,8);
+           end
+       end
        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function f = get.f(obj)
@@ -1188,7 +1256,7 @@ classdef ModelMonostable < handle
        end
        
        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-       function FastPxx = get.FastPxx(obj)
+       function FastPxx = get.FastPxx(obj) 
            if obj.stype<2
                FastPxx=obj.FastPxx_;
            else

@@ -1,7 +1,7 @@
 function setup(mdl)
     if mdl.stype==1
-        if strcmp({'e','m'},mdl.byname)
-            mdl.eq=mdl.conf.ode1D;
+        if strcmp({'e','m'},mdl.byname) | mdl.isauto
+            mdl.eq='automonostableode1D';
         else
             mdl.eq='monostableode1D';
         end
@@ -11,8 +11,8 @@ function setup(mdl)
         mdl.vfrange=mdl.conf.vfrange1D;
         mdl.vf_=mdl.conf.vf1D;
     elseif mdl.stype==2
-        if strcmp(mdl.byname,'em')
-            mdl.eq=mdl.conf.ode2D;
+        if strcmp(mdl.byname,'em') | mdl.isauto
+            mdl.eq='automonostableode2D';        
         else
             mdl.eq='monostableode2D';
         end

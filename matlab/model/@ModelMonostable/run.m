@@ -4,8 +4,10 @@ function run(mdl)
     %else
     %    [mdl.t, mdl.ph] = mdl.ode(mdl.eq,mdl.tspan,mdl.IC,mdl.options,mdl.params{:});    
     %end
-    clear(mdl.eq)
-    clear('ynoise')
+    if mdl.isauto==0
+        clear(mdl.eq)
+        clear('ynoise')
+    end
     [mdl.t, mdl.ph] = mdl.ode(mdl.eq,mdl.tspan,mdl.IC,mdl.options,mdl.params{:});    
     if mdl.stype<2
         mdl.ph=filterdata(mdl.ph,24,50);

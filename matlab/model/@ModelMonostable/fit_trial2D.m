@@ -1,4 +1,5 @@
-function pguess=fit_trial2D(mdl,tr,do_plot)
+function pguess=fit_trial2D(mdl,tr,do_plot,alphac)
+    if nargin<4, alphac=0.0;end
     if nargin<3, do_plot=1;end
     
     %Easy hand always first in the model (equation 1)
@@ -18,7 +19,8 @@ function pguess=fit_trial2D(mdl,tr,do_plot)
     pguess=cell(size(mdl.params));
     omega_phhist=cell([2,1]);
     wfexp=cell([2,1]);
-    pguess{end-2}=0.5;
+    %pguess{end-2}=alphac;
+    pguess{end-2}=0;
     pguess{end-1}=1.0;
     pguess{end}=1.0;
     %pinit=mdl.params; 
@@ -42,7 +44,11 @@ function pguess=fit_trial2D(mdl,tr,do_plot)
     for h=1:2
         idx=length(pguess)-(2-h);
         pguess{idx}=pguess{end}*range(omega_phhist{h})/range(mdl.(['omega',num2str(h),'_phhist']));
-        pguess{ h }=sqrt(wfexp{h}^2+5*pguess{idx}^2);
+        if tr.info.([hands{h},'ID']) < 3
+            pguess{ h }=sqrt(wfexp{h}^2+(3*pguess{idx})^2);
+        else
+            pguess{ h }=sqrt(wfexp{h}^2+(1.5*pguess{idx})^2);
+        end
         %pguess{idx}=pguess{idx}*range(tr.ts.([hands{h},'omega_phhist']))/range(mdl.(['omega',num2str(h),'_phhist']));
     end
 
@@ -53,8 +59,13 @@ function pguess=fit_trial2D(mdl,tr,do_plot)
         pguess{h}=sqrt(pguess{h}^2+wfexp{h}^2-mean(mdl.phdot(:,h))^2);
     end
     
-    if do_plot, mdl.plot_trfit2D(tr,pguess); end 
-    %mdl.load_param(pguess);
+    pguess{end-2}=alphac;
+    if do_plot 
+        mdl.plot_trfit2D(tr,pguess);
+    else
+        mdl.load_param(pguess);
+        mdl.run;
+    end 
 end
 
 function idsrt=get_idsrt(id)
